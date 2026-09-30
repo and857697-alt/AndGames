@@ -1,0 +1,5 @@
+database.db
+_backup/
+uploads/
+__pycache__/
+*.pyc
