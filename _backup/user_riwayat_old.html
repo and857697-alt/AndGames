@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Riwayat - AndGames{% endblock %}
+{% block header_title %}Riwayat Transaksi{% endblock %}
+
+{% block content %}
+<div class="mini-nav">
+  <a href="{{ url_for('user_riwayat', tab='all') }}" class="{{ 'active' if tab=='all' }}">Semua</a>
+  <a href="{{ url_for('user_riwayat', tab='deposit') }}" class="{{ 'active' if tab=='deposit' }}">Deposit</a>
+  <a href="{{ url_for('user_riwayat', tab='withdraw') }}" class="{{ 'active' if tab=='withdraw' }}">Withdraw</a>
+</div>
+
+<div class="wrap">
+  {% if tx %}
+  <table>
+    <tr><th>Waktu</th><th>Tipe</th><th>Jumlah</th><th>Status</th></tr>
+    {% for t in tx %}
+    <tr>
+      <td class="muted">{{ t.created_at }}</td>
+      <td>{{ '💰 Depo' if t.tipe=='deposit' else '💸 WD' }}</td>
+      <td>Rp {{ "{:,.0f}".format(t.jumlah).replace(",",".") }}</td>
+      <td><span class="badge {{ t.status }}">{{ t.status }}</span></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="empty">Belum ada transaksi.</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block bottomnav %}{% include "partials/bottomnav.html" %}{% endblock %}

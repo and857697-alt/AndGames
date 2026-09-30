@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Kelola Deposit - AndGames{% endblock %}
+{% block header_title %}Kelola Deposit{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('admin') }}" style="color:#fff;font-size:13px">← Dashboard</a>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  {% if rows %}
+  <table>
+    <tr><th>ID</th><th>User</th><th>Jumlah</th><th>Status</th><th>Aksi</th></tr>
+    {% for t in rows %}
+    <tr>
+      <td>#{{ t.id }}<br><span class="muted">{{ t.created_at }}</span></td>
+      <td>{{ t.username }}</td>
+      <td>Rp {{ "{:,.0f}".format(t.jumlah).replace(",",".") }}</td>
+      <td><span class="badge {{ t.status }}">{{ t.status }}</span>
+        {% if t.admin_note %}<br><span class="muted">{{ t.admin_note }}</span>{% endif %}
+      </td>
+      <td style="white-space:nowrap">
+        {% if t.status == 'pending' %}
+        <form method="post" action="{{ url_for('admin_deposit_action', tid=t.id, aksi='approve') }}"
+              style="display:inline">
+          <button class="small success">Approve</button>
+        </form>
+        <form method="post" action="{{ url_for('admin_deposit_action', tid=t.id, aksi='reject') }}"
+              style="display:inline" onsubmit="return confirm('Tolak deposit #{{ t.id }}?')">
+          <button class="small danger">Reject</button>
+        </form>
+        {% else %}—{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="empty">Belum ada transaksi deposit.</div>
+  {% endif %}
+</div>
+{% endblock %}

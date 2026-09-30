@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Setelan Game - Admin{% endblock %}
+{% block header_title %}⚙️ Setelan Game{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('admin') }}" style="color:var(--primary-2);font-size:12px;font-weight:700;text-decoration:none">← Dashboard</a>
+{% endblock %}
+
+{% block head %}
+<style>
+  .game-stats{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;
+  }
+  .gstat{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:14px;position:relative;overflow:hidden;
+  }
+  .gstat .gl{font-size:10px;color:var(--muted);font-weight:700;
+    text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+  .gstat .gv{font-size:18px;font-weight:800;letter-spacing:-.3px}
+  .gstat.green .gv{color:#34d399}
+  .gstat.amber .gv{color:#fbbf24}
+  .gstat.purple .gv{
+    background:var(--grad-1);-webkit-background-clip:text;
+    background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .gstat.red .gv{color:#f87171}
+
+  .cfg-card{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:18px;margin-bottom:14px;
+  }
+  .cfg-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 0;border-bottom:1px solid var(--border);
+  }
+  .cfg-row:last-child{border-bottom:0}
+  .cfg-row .lbl{font-size:13px;font-weight:600;color:var(--text-2)}
+  .cfg-row .lbl small{display:block;font-size:11px;color:var(--muted);
+    font-weight:400;margin-top:2px}
+  .cfg-row .inp{
+    width:120px;text-align:right;margin:0;font-weight:700;
+    background:var(--card-2);
+  }
+  .toggle{
+    position:relative;width:48px;height:26px;flex-shrink:0;
+    background:var(--border-2);border-radius:20px;cursor:pointer;
+    transition:.2s;margin:0;
+  }
+  .toggle.on{background:var(--green)}
+  .toggle::after{
+    content:"";position:absolute;top:3px;left:3px;
+    width:20px;height:20px;background:#fff;border-radius:50%;
+    transition:.2s;
+  }
+  .toggle.on::after{left:25px}
+
+  .menu-links{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .menu-links a{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:14px;text-align:center;
+    text-decoration:none;color:var(--text);transition:.2s;
+    display:flex;flex-direction:column;gap:6px;align-items:center;
+  }
+  .menu-links a:hover{border-color:var(--primary);transform:translateY(-2px)}
+  .menu-links a .mi{font-size:22px}
+  .menu-links a .mt{font-size:13px;font-weight:700}
+  .menu-links a .ms{font-size:10px;color:var(--muted)}
+
+  .save-btn{
+    background:var(--grad-1) !important;font-size:15px !important;
+    padding:14px !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="menu-links">
+  <a href="{{ url_for('admin_game_users') }}">
+    <div class="mi">👥</div>
+    <div class="mt">Override User</div>
+    <div class="ms">Atur per user</div>
+  </a>
+  <a href="{{ url_for('admin') }}">
+    <div class="mi">🏠</div>
+    <div class="mt">Dashboard</div>
+    <div class="ms">Kembali</div>
+  </a>
+</div>
+
+<div class="game-stats">
+  <div class="gstat purple">
+    <div class="gl">Total Ronde</div>
+    <div class="gv">{{ stats.total_rounds }}</div>
+  </div>
+  <div class="gstat green">
+    <div class="gl">Total Bet</div>
+    <div class="gv">Rp {{ "{:,.0f}".format(stats.total_bet).replace(",",".") }}</div>
+  </div>
+  <div class="gstat amber">
+    <div class="gl">Total Payout</div>
+    <div class="gv">Rp {{ "{:,.0f}".format(stats.total_payout).replace(",",".") }}</div>
+  </div>
+  <div class="gstat {{ 'red' if stats.profit < 0 else 'green' }}">
+    <div class="gl">Profit Admin</div>
+    <div class="gv">
+      {{ '-' if stats.profit < 0 else '' }}Rp {{ "{:,.0f}".format(stats.profit|abs).replace(",",".") }}
+    </div>
+  </div>
+</div>
+
+<form method="post" action="{{ url_for('admin_game_config_save') }}">
+  <div class="cfg-card">
+    <div class="cfg-row">
+      <div class="lbl">Status Game
+        <small>Aktif/nonaktifkan seluruh game</small>
+      </div>
+      <label class="toggle {{ 'on' if cfg.enabled }}" id="toggleEnabled">
+        <input type="checkbox" name="enabled" {{ 'checked' if cfg.enabled }}
+               style="display:none" id="cbEnabled">
+      </label>
+    </div>
+
+    <div class="cfg-row">
+      <div class="lbl">Profit Margin (%)
+        <small>Semakin besar, semakin untung admin</small>
+      </div>
+      <input class="inp" type="number" step="0.1" name="profit_margin"
+             value="{{ cfg.profit_margin }}">
+    </div>
+
+    <div class="cfg-row">
+      <div class="lbl">Min Bet (Rp)</div>
+      <input class="inp" type="number" name="min_bet" value="{{ int(cfg.min_bet) }}">
+    </div>
+
+    <div class="cfg-row">
+      <div class="lbl">Max Bet (Rp)</div>
+      <input class="inp" type="number" name="max_bet" value="{{ int(cfg.max_bet) }}">
+    </div>
+
+    <div class="cfg-row">
+      <div class="lbl">Max Win Harian (Rp)
+        <small>Batas menang user per hari</small>
+      </div>
+      <input class="inp" type="number" name="max_win_per_day"
+             value="{{ int(cfg.max_win_per_day) }}">
+    </div>
+  </div>
+
+  <button type="submit" class="save-btn">💾 Simpan Setelan</button>
+</form>
+
+<script>
+  const t = document.getElementById('toggleEnabled');
+  const cb = document.getElementById('cbEnabled');
+  t.onclick = e => {
+    e.preventDefault();
+    cb.checked = !cb.checked;
+    t.classList.toggle('on', cb.checked);
+  };
+</script>
+
+{% endblock %}

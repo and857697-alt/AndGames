@@ -1,0 +1,33 @@
+<nav class="bottomnav">
+  <a href="{{ url_for('user_home') }}" class="{{ 'active' if active=='home' }}">
+    <span class="ico">🏠</span><span>Home</span>
+  </a>
+  <a href="{{ url_for('user_deposit') }}" class="{{ 'active' if active=='deposit' }}">
+    <span class="ico">💰</span><span>Deposit</span>
+  </a>
+  <a href="{{ url_for('user_withdraw') }}" class="{{ 'active' if active=='withdraw' }}">
+    <span class="ico">💸</span><span>Withdraw</span>
+  </a>
+  <a href="{{ url_for('user_riwayat') }}" class="{{ 'active' if active=='riwayat' }}">
+    <span class="ico">📜</span><span>Riwayat</span>
+  </a>
+  <a href="{{ url_for('user_profil') }}" class="{{ 'active' if active=='profil' }}">
+    <span class="ico">👤</span><span>Profil</span>
+  </a>
+</nav>
+
+<style>
+  .bottomnav{
+    position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;
+    display:flex;background:#fff;border-top:1px solid var(--border);
+    box-shadow:0 -2px 10px rgba(0,0,0,.06);z-index:100;
+    padding:6px 0 calc(6px + env(safe-area-inset-bottom));
+  }
+  .bottomnav a{
+    flex:1;text-align:center;color:var(--muted);text-decoration:none;
+    font-size:10px;font-weight:500;padding:4px 0;transition:.15s;
+  }
+  .bottomnav a .ico{display:block;font-size:20px;margin-bottom:2px}
+  .bottomnav a.active{color:var(--primary)}
+  .bottomnav a:hover{text-decoration:none}
+</style>

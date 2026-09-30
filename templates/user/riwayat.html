@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}Riwayat - AndGames{% endblock %}
+{% block header_title %}Riwayat{% endblock %}
+{% block header_right %}
+  <div class="saldo-chip">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M14.5 9.5c-.5-.5-1.5-1-2.5-1s-2.5.5-2.5 1.5S10.5 11.5 12 11.5s2.5.5 2.5 1.5-1.5 1.5-2.5 1.5-2-.5-2.5-1"/>
+    </svg>
+    Rp {{ "{:,.0f}".format(u.saldo).replace(",",".") }}
+  </div>
+{% endblock %}
+
+{% block head %}
+<style>
+  .filter-tabs{
+    display:flex;gap:6px;background:var(--card);border:1px solid var(--border);
+    border-radius:12px;padding:4px;margin-bottom:12px;
+  }
+  .filter-tabs a{
+    flex:1;text-align:center;padding:9px 6px;border-radius:9px;
+    font-size:12px;font-weight:700;color:var(--muted);
+    text-decoration:none;transition:.2s;
+  }
+  .filter-tabs a:hover{color:var(--text-2)}
+  .filter-tabs a.active{background:var(--grad-1);color:#fff}
+
+  .filter-date{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;
+  }
+  .filter-date .row2{display:flex;gap:8px;align-items:center}
+  .filter-date label{font-size:11px;color:var(--muted);
+    font-weight:700;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px}
+  .filter-date input[type=date]{
+    margin:0;padding:9px 12px;font-size:12px;
+  }
+  .filter-date .apply{
+    margin-top:10px;display:flex;gap:8px;
+  }
+  .filter-date .apply button{
+    padding:10px;font-size:13px;margin:0;
+  }
+
+  .stat-mini{
+    display:flex;gap:8px;margin-bottom:14px;
+  }
+  .stat-mini .sm{
+    flex:1;background:var(--card);border:1px solid var(--border);
+    border-radius:12px;padding:10px 12px;
+  }
+  .stat-mini .sm .lbl{font-size:10px;color:var(--muted);font-weight:700;
+    text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+  .stat-mini .sm .val{font-size:14px;font-weight:800}
+  .stat-mini .sm.in .val{color:#34d399}
+  .stat-mini .sm.out .val{color:#fbbf24}
+
+  .tx-list{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);overflow:hidden;margin-bottom:14px;
+  }
+  .tx-item{
+    display:flex;align-items:center;gap:12px;
+    padding:14px;border-bottom:1px solid var(--border);
+    text-decoration:none;color:inherit;
+    transition:.2s;
+  }
+  .tx-item:last-child{border-bottom:0}
+  .tx-item:hover{background:rgba(139,92,246,.06)}
+  .tx-item .ic{
+    width:40px;height:40px;border-radius:12px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .tx-item .ic.depo{
+    background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(52,211,153,.1));
+    color:#34d399;
+  }
+  .tx-item .ic.wd{
+    background:linear-gradient(135deg,rgba(251,191,36,.2),rgba(245,158,11,.1));
+    color:#fbbf24;
+  }
+  .tx-item .ic svg{width:19px;height:19px;stroke:currentColor;stroke-width:2.2}
+  .tx-item .info{flex:1;min-width:0}
+  .tx-item .jt{font-size:13px;font-weight:700;margin-bottom:2px;
+    color:var(--text)}
+  .tx-item .waktu{font-size:11px;color:var(--muted)}
+  .tx-item .right{text-align:right;flex-shrink:0;display:flex;
+    flex-direction:column;align-items:flex-end;gap:4px}
+  .tx-item .jl{font-size:14px;font-weight:800;letter-spacing:-.2px}
+  .tx-item .jl.in{color:#34d399}
+  .tx-item .jl.out{color:#fbbf24}
+  .tx-item .arrow{color:var(--muted);font-size:16px;line-height:1}
+
+  .pagination{
+    display:flex;justify-content:center;align-items:center;
+    gap:8px;margin-bottom:14px;
+  }
+  .pagination a, .pagination span{
+    padding:8px 14px;border-radius:10px;font-size:13px;
+    background:var(--card);border:1px solid var(--border);
+    color:var(--text-2);font-weight:600;text-decoration:none;
+    transition:.2s;
+  }
+  .pagination a:hover{
+    border-color:var(--primary);color:var(--primary-2);
+    background:rgba(139,92,246,.08);
+  }
+  .pagination span.cur{
+    background:var(--grad-1);color:#fff;border-color:transparent;
+    box-shadow:0 4px 14px rgba(139,92,246,.4);
+  }
+  .pagination span.dis{
+    opacity:.4;pointer-events:none;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="filter-tabs">
+  <a href="{{ url_for('user_riwayat', tab='all', dari=dari, sampai=sampai) }}"
+     class="{{ 'active' if tab=='all' }}">Semua</a>
+  <a href="{{ url_for('user_riwayat', tab='deposit', dari=dari, sampai=sampai) }}"
+     class="{{ 'active' if tab=='deposit' }}">Deposit</a>
+  <a href="{{ url_for('user_riwayat', tab='withdraw', dari=dari, sampai=sampai) }}"
+     class="{{ 'active' if tab=='withdraw' }}">Withdraw</a>
+</div>
+
+<div class="stat-mini">
+  <div class="sm in">
+    <div class="lbl">Masuk</div>
+    <div class="val">Rp {{ "{:,.0f}".format(summary.total_in or 0).replace(",",".") }}</div>
+  </div>
+  <div class="sm out">
+    <div class="lbl">Keluar</div>
+    <div class="val">Rp {{ "{:,.0f}".format(summary.total_out or 0).replace(",",".") }}</div>
+  </div>
+</div>
+
+<div class="filter-date">
+  <form method="get">
+    <input type="hidden" name="tab" value="{{ tab }}">
+    <div class="row2">
+      <div style="flex:1">
+        <label>Dari</label>
+        <input type="date" name="dari" value="{{ dari or '' }}">
+      </div>
+      <div style="flex:1">
+        <label>Sampai</label>
+        <input type="date" name="sampai" value="{{ sampai or '' }}">
+      </div>
+    </div>
+    <div class="apply">
+      <button type="submit">Filter</button>
+      {% if dari or sampai %}
+      <a href="{{ url_for('user_riwayat', tab=tab) }}" style="flex:1">
+        <button type="button" class="ghost" style="width:100%">Reset</button>
+      </a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+{% if tx %}
+<div class="tx-list">
+  {% for t in tx %}
+  <div class="tx-item">
+    <div class="ic {{ 'depo' if t.tipe=='deposit' else 'wd' }}">
+      {% if t.tipe=='deposit' %}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      {% else %}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 17l9.2-9.2M17 17V7H7"/>
+      </svg>
+      {% endif %}
+    </div>
+    <div class="info">
+      <div class="jt">
+        {{ 'Deposit' if t.tipe=='deposit' else 'Withdraw' }}
+        <span class="badge {{ t.status }}" style="margin-left:6px;font-size:9px;padding:2px 7px">{{ t.status }}</span>
+      </div>
+      <div class="waktu">{{ t.created_at }}</div>
+    </div>
+    <div class="right">
+      <div class="jl {{ 'in' if t.tipe=='deposit' else 'out' }}">
+        {{ '+' if t.tipe=='deposit' else '−' }}Rp {{ "{:,.0f}".format(t.jumlah).replace(",",".") }}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="pagination">
+  {% if page > 1 %}
+    <a href="{{ url_for('user_riwayat', tab=tab, dari=dari, sampai=sampai, page=page-1) }}">← Prev</a>
+  {% else %}
+    <span class="dis">← Prev</span>
+  {% endif %}
+
+  <span class="cur">{{ page }} / {{ total_pages }}</span>
+
+  {% if page < total_pages %}
+    <a href="{{ url_for('user_riwayat', tab=tab, dari=dari, sampai=sampai, page=page+1) }}">Next →</a>
+  {% else %}
+    <span class="dis">Next →</span>
+  {% endif %}
+</div>
+
+{% else %}
+<div class="empty">
+  Tidak ada transaksi{{ ' di rentang tanggal ini' if dari or sampai }}.
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block bottomnav %}{% include "partials/bottomnav.html" %}{% endblock %}

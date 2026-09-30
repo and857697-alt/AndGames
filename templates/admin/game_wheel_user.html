@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Override Spin - Admin{% endblock %}
+{% block header_title %}👥 Override Spin{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('admin_game_wheel') }}" style="color:var(--primary-2);font-size:12px;font-weight:700;text-decoration:none">← Roda</a>
+{% endblock %}
+
+{% block head %}
+<style>
+  .info-banner{
+    background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);
+    border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;
+    color:var(--text-2);line-height:1.6;margin-bottom:14px;
+  }
+  .info-banner b{color:var(--primary-2)}
+
+  .user-row{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:14px;margin-bottom:10px;
+    transition:.2s;
+  }
+  .user-row:hover{border-color:var(--border-2)}
+  .user-row.overridden{border-color:rgba(139,92,246,.4);
+    background:linear-gradient(135deg,rgba(139,92,246,.05),var(--card))}
+  .user-row.blocked{border-color:rgba(239,68,68,.4);
+    background:linear-gradient(135deg,rgba(239,68,68,.05),var(--card))}
+
+  .user-head{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    gap:10px;margin-bottom:10px;
+  }
+  .user-head .uinfo{flex:1;min-width:0}
+  .user-head .un{font-size:14px;font-weight:700;margin-bottom:2px}
+  .user-head .ue{font-size:11px;color:var(--muted);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .user-head .badge-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+  .user-head .tag{
+    font-size:9px;padding:2px 8px;border-radius:20px;
+    font-weight:700;letter-spacing:.3px;
+  }
+  .user-head .tag.win{background:rgba(16,185,129,.15);color:#34d399}
+  .user-head .tag.lose{background:rgba(239,68,68,.15);color:#f87171}
+  .user-head .tag.blocked{background:rgba(239,68,68,.2);color:#f87171}
+  .user-head .tag.custom{background:rgba(139,92,246,.15);color:#a855f7}
+
+  .user-form{
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;
+    padding-top:10px;border-top:1px solid var(--border);
+  }
+  .user-form .full{grid-column:1/-1}
+  .user-form label{font-size:10px;color:var(--muted);font-weight:700;
+    text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;
+    display:block}
+  .user-form input,.user-form select{
+    margin:0;padding:8px 10px;font-size:12px;
+  }
+  .user-form .acts{grid-column:1/-1;display:flex;gap:6px;margin-top:6px}
+  .user-form .acts > *{flex:1}
+  .user-form .acts button{padding:10px;font-size:12px;margin:0}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="info-banner">
+  <b>🔒 Silent Override Spin:</b><br>
+  • <b>Force Next</b>: paksa hasil spin berikutnya (sekali saja)<br>
+  • <b>Block Spin</b>: cegah user main Spin Wheel (tanpa block game lain)
+</div>
+
+{% if users %}
+  {% for u in users %}
+  {% set has_override = u.spin_blocked or u.spin_force_next %}
+  <div class="user-row {{ 'blocked' if u.spin_blocked else 'overridden' if has_override }}">
+    <div class="user-head">
+      <div class="uinfo">
+        <div class="un">#{{ u.id }} • {{ u.username }}</div>
+        <div class="ue">{{ u.email }}</div>
+        <div class="badge-row">
+          {% if u.spin_blocked %}<span class="tag blocked">🚫 BLOCKED</span>{% endif %}
+          {% if u.spin_force_next == 'win' %}<span class="tag win">🎯 FORCE WIN</span>{% endif %}
+          {% if u.spin_force_next == 'lose' %}<span class="tag lose">💨 FORCE LOSE</span>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <form class="user-form" method="post"
+          action="{{ url_for('admin_game_wheel_user_save', uid=u.id) }}">
+      <div class="full">
+        <label>Force Next Spin</label>
+        <select name="spin_force_next">
+          <option value="">— Tidak —</option>
+          <option value="win" {{ 'selected' if u.spin_force_next == 'win' }}>Paksa Menang</option>
+          <option value="lose" {{ 'selected' if u.spin_force_next == 'lose' }}>Paksa Zonk</option>
+        </select>
+      </div>
+      <div class="full" style="display:flex;align-items:center;gap:8px">
+        <label style="margin:0;flex:1">🚫 Block Spin Wheel</label>
+        <input type="checkbox" name="spin_blocked" {{ 'checked' if u.spin_blocked }}
+               style="width:auto;margin:0">
+      </div>
+      <div class="acts">
+        <button type="submit" class="success">💾 Simpan</button>
+      </div>
+    </form>
+  </div>
+  {% endfor %}
+{% else %}
+<div class="empty">Belum ada user.</div>
+{% endif %}
+
+{% endblock %}

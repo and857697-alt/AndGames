@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+{% block title %}Bonus - AndGames{% endblock %}
+{% block header_title %}🎁 Bonus{% endblock %}
+{% block header_right %}
+  <div class="saldo-chip">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M14.5 9.5c-.5-.5-1.5-1-2.5-1s-2.5.5-2.5 1.5S10.5 11.5 12 11.5s2.5.5 2.5 1.5-1.5 1.5-2.5 1.5-2-.5-2.5-1"/>
+    </svg>
+    Rp {{ "{:,.0f}".format(u.saldo).replace(",",".") }}
+  </div>
+{% endblock %}
+
+{% block head %}
+<style>
+  .hero-bonus{
+    background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(239,68,68,.1));
+    border:1px solid rgba(251,191,36,.35);
+    border-radius:var(--radius);padding:20px;margin-bottom:16px;
+    text-align:center;position:relative;overflow:hidden;
+  }
+  .hero-bonus::before{
+    content:"";position:absolute;top:-50%;right:-30%;
+    width:200px;height:200px;border-radius:50%;
+    background:radial-gradient(circle,rgba(251,191,36,.3),transparent 70%);
+    pointer-events:none;
+  }
+  .hero-bonus h2{margin:0 0 4px;font-size:20px;font-weight:800}
+  .hero-bonus p{margin:0;color:var(--muted);font-size:12px}
+
+  .bonus-card{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:18px;margin-bottom:14px;
+    position:relative;overflow:hidden;
+  }
+  .bonus-card h3{
+    margin:0 0 12px;font-size:14px;text-transform:uppercase;
+    letter-spacing:.8px;color:var(--text-2);font-weight:700;
+    display:flex;align-items:center;gap:8px;
+  }
+
+  /* STREAK GRID */
+  .streak-grid{
+    display:grid;grid-template-columns:repeat(7,1fr);gap:6px;
+    margin-bottom:14px;
+  }
+  .streak-day{
+    aspect-ratio:1/1.1;border-radius:10px;
+    background:var(--card-2);border:1px solid var(--border);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-size:10px;font-weight:700;color:var(--muted);padding:4px 2px;
+    position:relative;
+  }
+  .streak-day .day-num{font-size:11px;margin-bottom:2px}
+  .streak-day .day-amt{font-size:9px;color:var(--text-2);font-weight:800;line-height:1}
+  .streak-day.done{
+    background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(52,211,153,.1));
+    border-color:#34d399;color:#34d399;
+  }
+  .streak-day.done .day-amt{color:#34d399}
+  .streak-day.next{
+    background:var(--grad-1);border-color:transparent;color:#fff;
+    box-shadow:0 6px 16px rgba(139,92,246,.4);
+    animation:pulseGlow 2s infinite;
+  }
+  .streak-day.next .day-amt{color:#fff}
+
+  .claim-btn{
+    background:linear-gradient(135deg,#fbbf24,#f59e0b) !important;
+    font-size:15px !important;padding:14px !important;font-weight:800 !important;
+  }
+  .claim-btn:hover{box-shadow:0 8px 24px rgba(251,191,36,.5) !important}
+  .claim-btn:disabled{
+    background:var(--card-2) !important;color:var(--muted) !important;
+  }
+
+  /* SPIN CARD */
+  .spin-card{
+    background:linear-gradient(135deg,rgba(139,92,246,.15),rgba(59,130,246,.08));
+    border:1px solid rgba(139,92,246,.35);
+  }
+  .spin-box{
+    display:flex;flex-direction:column;align-items:center;
+    padding:14px 0;
+  }
+  .spin-wheel-icon{
+    font-size:64px;margin-bottom:12px;
+    animation:spinSlow 4s linear infinite;
+    display:inline-block;
+  }
+  @keyframes spinSlow{to{transform:rotate(360deg)}}
+  .spin-prizes{
+    display:flex;gap:6px;flex-wrap:wrap;justify-content:center;
+    margin-bottom:14px;
+  }
+  .spin-prizes .pr{
+    padding:4px 10px;border-radius:20px;font-size:11px;font-weight:800;
+    background:var(--card-2);border:1px solid var(--border);
+    color:var(--text-2);
+  }
+  .spin-prizes .pr.gold{background:rgba(251,191,36,.15);border-color:#fbbf24;color:#fbbf24}
+  .spin-prizes .pr.rare{background:rgba(239,68,68,.15);border-color:#f87171;color:#f87171}
+
+  /* PROMO */
+  .promo-input{
+    display:flex;gap:8px;margin-bottom:14px;
+  }
+  .promo-input input{
+    flex:1;margin:0;text-transform:uppercase;font-weight:700;
+    letter-spacing:1px;text-align:center;
+  }
+  .promo-input button{width:auto;padding:12px 20px;margin:0;flex-shrink:0}
+
+  .promo-history{
+    background:var(--card-2);border-radius:10px;overflow:hidden;
+  }
+  .promo-hitem{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;
+  }
+  .promo-hitem:last-child{border-bottom:0}
+  .promo-hitem .code{
+    font-weight:800;letter-spacing:1px;color:var(--primary-2);
+  }
+
+  /* MODAL RESULT */
+  .modal-result{
+    display:none;position:fixed;inset:0;z-index:9999;
+    align-items:center;justify-content:center;padding:16px;
+    background:rgba(0,0,0,.88);backdrop-filter:blur(10px);
+  }
+  .modal-result.show{display:flex}
+  .modal-result .box{
+    background:var(--card);border:1px solid var(--border-2);
+    border-radius:24px;padding:32px 24px;text-align:center;
+    max-width:340px;width:100%;animation:popIn .4s ease;
+  }
+  @keyframes popIn{
+    0%{transform:scale(.5);opacity:0}60%{transform:scale(1.05)}
+    100%{transform:scale(1);opacity:1}
+  }
+  .modal-result .emoji{font-size:72px;margin-bottom:12px;display:block}
+  .modal-result h2{margin:0 0 8px;font-size:24px}
+  .modal-result p{color:var(--muted);font-size:14px;margin:0 0 18px}
+  .modal-result .amt{
+    font-size:32px;font-weight:800;
+    background:var(--grad-1);-webkit-background-clip:text;
+    background-clip:text;-webkit-text-fill-color:transparent;
+    margin:8px 0 20px;
+  }
+
+  .info-note{
+    background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);
+    border-radius:10px;padding:10px 12px;font-size:11px;
+    color:#60a5fa;line-height:1.5;margin-bottom:12px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="hero-bonus">
+  <h2>🎁 Bonus Spesial</h2>
+  <p>Klaim bonus tiap hari, spin gratis, tukar kode promo!</p>
+</div>
+
+<!-- ===== DAILY BONUS ===== -->
+<div class="bonus-card">
+  <h3>🎯 Bonus Harian — Hari ke {{ daily.streak if daily.streak > 0 else 1 }}</h3>
+
+  <div class="streak-grid">
+    {% for amt in bonus_table %}
+    {% set day = loop.index %}
+    <div class="streak-day 
+      {% if day <= daily.streak %}done
+      {% elif day == daily.next_streak and not daily.claimed_today %}next{% endif %}">
+      <div class="day-num">H{{ day }}</div>
+      <div class="day-amt">{{ amt }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if daily.claimed_today %}
+    <button disabled style="width:100%">
+      ✅ Sudah Klaim Hari Ini — Besok Lagi!
+    </button>
+  {% else %}
+    <button class="claim-btn" onclick="claimBonus()" style="width:100%">
+      🎁 Klaim Rp {{ "{:,.0f}".format(daily.next_nominal).replace(",",".") }} (H{{ daily.next_streak }})
+    </button>
+  {% endif %}
+
+  <div class="info-note" style="margin-top:12px;margin-bottom:0">
+    ⚠️ Login tiap hari biar streak lanjut. Bolong 1 hari → reset ke H1.
+  </div>
+</div>
+
+<!-- ===== FREE SPIN ===== -->
+<div class="bonus-card spin-card">
+  <h3>🎰 Spin Gratis Harian</h3>
+
+  <div class="spin-box">
+    <div class="spin-wheel-icon">🎡</div>
+    <div class="spin-prizes">
+      <span class="pr">Rp 100</span>
+      <span class="pr">Rp 200</span>
+      <span class="pr">Rp 300</span>
+      <span class="pr">Rp 500</span>
+      <span class="pr gold">Rp 1.000</span>
+      <span class="pr gold">Rp 2.000</span>
+      <span class="pr rare">Rp 5.000 🔥</span>
+    </div>
+  </div>
+
+  {% if free_spin.can_spin %}
+    <button class="claim-btn" onclick="doFreeSpin()" style="width:100%">
+      🎰 SPIN GRATIS — Hadiah Langsung ke Saldo!
+    </button>
+  {% else %}
+    <button disabled style="width:100%">
+      ⏰ Sudah Spin Hari Ini — Reset Jam 00:00
+    </button>
+  {% endif %}
+
+  {% if free_spin.total_count > 0 %}
+  <div class="info-note" style="margin-top:12px;margin-bottom:0;text-align:center">
+    Total spin: <b>{{ free_spin.total_count }}x</b> • 
+    Total hadiah: <b>Rp {{ "{:,.0f}".format(free_spin.total_won).replace(",",".") }}</b>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ===== KODE PROMO ===== -->
+<div class="bonus-card">
+  <h3>🎟️ Kode Promo</h3>
+  <p class="muted" style="font-size:12px;margin:0 0 12px">
+    Masukkan kode promo untuk dapat saldo bonus!
+  </p>
+
+  <div class="promo-input">
+    <input id="promoCode" placeholder="KODE PROMO" maxlength="20">
+    <button class="success" onclick="redeemPromo()">Tukar</button>
+  </div>
+
+  {% if promo_history %}
+  <h3 style="font-size:11px;margin:12px 0 8px">Riwayat Kode</h3>
+  <div class="promo-history">
+    {% for p in promo_history %}
+    <div class="promo-hitem">
+      <div>
+        <div class="code">{{ p.code }}</div>
+        <div class="muted" style="font-size:10px">{{ p.used_at }}</div>
+      </div>
+      <div style="font-weight:800;color:#34d399">
+        +Rp {{ "{:,.0f}".format(p.nominal).replace(",",".") }}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- MODAL HASIL -->
+<div class="modal-result" id="modalResult">
+  <div class="box">
+    <span class="emoji" id="modalEmoji">🎉</span>
+    <h2 id="modalTitle">Selamat!</h2>
+    <p id="modalText"></p>
+    <div class="amt" id="modalAmt">Rp 0</div>
+    <button onclick="closeModal()">OK, Lanjut!</button>
+  </div>
+</div>
+
+<script>
+function fmt(n){
+  return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+async function claimBonus(){
+  try {
+    const r = await fetch('{{ url_for("user_bonus_claim") }}', {method: 'POST'});
+    const d = await r.json();
+    if (!d.ok) { alert(d.err); return; }
+    if (window.refreshSaldo) window.refreshSaldo();
+    showResult('🎁', 'Bonus Harian H' + d.streak, 'Kamu dapat bonus harian!', '+Rp ' + fmt(d.nominal));
+  } catch(e) { alert('Koneksi error'); }
+}
+
+async function doFreeSpin(){
+  try {
+    const r = await fetch('{{ url_for("user_bonus_spin") }}', {method: 'POST'});
+    const d = await r.json();
+    if (!d.ok) { alert(d.err); return; }
+    if (window.refreshSaldo) window.refreshSaldo();
+    let emoji = '🎰';
+    let title = 'Spin Gratis!';
+    if (d.nominal >= 2000) { emoji = '🔥'; title = 'JACKPOT!'; }
+    else if (d.nominal >= 1000) { emoji = '⭐'; title = 'Mantap!'; }
+    showResult(emoji, title, 'Hadiah dari spin gratis:', '+Rp ' + fmt(d.nominal));
+  } catch(e) { alert('Koneksi error'); }
+}
+
+async function redeemPromo(){
+  const inp = document.getElementById('promoCode');
+  const code = inp.value.trim().toUpperCase();
+  if (!code) { alert('Masukkan kode dulu'); return; }
+  try {
+    const r = await fetch('{{ url_for("user_bonus_promo") }}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({code: code})
+    });
+    const d = await r.json();
+    if (!d.ok) { alert(d.err); return; }
+    if (window.refreshSaldo) window.refreshSaldo();
+    inp.value = '';
+    showResult('🎟️', 'Kode Berhasil!', 'Kode promo berhasil ditukar:', '+Rp ' + fmt(d.nominal));
+  } catch(e) { alert('Koneksi error'); }
+}
+
+function showResult(emoji, title, text, amt){
+  document.getElementById('modalEmoji').textContent = emoji;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalText').textContent = text;
+  document.getElementById('modalAmt').textContent = amt;
+  document.getElementById('modalResult').classList.add('show');
+}
+function closeModal(){
+  document.getElementById('modalResult').classList.remove('show');
+  location.reload();
+}
+
+// auto uppercase
+document.getElementById('promoCode').addEventListener('input', e => {
+  e.target.value = e.target.value.toUpperCase();
+});
+</script>
+
+{% endblock %}
+
+{% block bottomnav %}{% include "partials/bottomnav.html" %}{% endblock %}

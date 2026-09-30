@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Kelola Deposit - AndGames{% endblock %}
+{% block header_title %}Kelola Deposit{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('admin') }}" style="color:#fff;font-size:13px">← Dashboard</a>
+{% endblock %}
+
+{% block head %}
+<style>
+  .thumb{
+    width:60px;height:60px;object-fit:cover;border-radius:8px;
+    border:1px solid var(--border);cursor:pointer;
+  }
+  .modal-bg{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);
+    z-index:999;align-items:center;justify-content:center;padding:16px;
+  }
+  .modal-bg.show{display:flex}
+  .modal-bg img{max-width:100%;max-height:90vh;border-radius:10px}
+  .close{
+    position:absolute;top:16px;right:20px;color:#fff;font-size:28px;
+    cursor:pointer;font-weight:700;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="mini-nav">
+  <a href="{{ url_for('admin') }}">← Dashboard</a>
+  <a href="{{ url_for('admin_withdraw') }}">Withdraw →</a>
+</div>
+
+<div class="wrap">
+  {% if rows %}
+  <table>
+    <tr>
+      <th>ID</th><th>User</th><th>Jumlah</th>
+      <th>Bukti</th><th>Status</th><th>Aksi</th>
+    </tr>
+    {% for t in rows %}
+    <tr>
+      <td>#{{ t.id }}<br><span class="muted">{{ t.created_at }}</span></td>
+      <td>{{ t.username }}</td>
+      <td>Rp {{ "{:,.0f}".format(t.jumlah).replace(",",".") }}</td>
+      <td>
+        {% if t.bukti %}
+          <img src="{{ url_for('admin_bukti', filename=t.bukti) }}"
+               class="thumb" onclick="showBukti(this.src)" alt="bukti">
+        {% else %}
+          <span class="muted">belum</span>
+        {% endif %}
+      </td>
+      <td>
+        <span class="badge {{ t.status }}">{{ t.status }}</span>
+        {% if t.admin_note %}<br><span class="muted">{{ t.admin_note }}</span>{% endif %}
+      </td>
+      <td style="white-space:nowrap">
+        {% if t.status == 'pending' %}
+          {% if t.bukti %}
+          <form method="post"
+                action="{{ url_for('admin_deposit_action', tid=t.id, aksi='approve') }}"
+                style="display:inline">
+            <button class="small success">Approve</button>
+          </form>
+          {% endif %}
+          <form method="post"
+                action="{{ url_for('admin_deposit_action', tid=t.id, aksi='reject') }}"
+                style="display:inline"
+                onsubmit="return confirm('Tolak deposit #{{ t.id }}?')">
+            <button class="small danger">Reject</button>
+          </form>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="empty">Belum ada transaksi deposit.</div>
+  {% endif %}
+</div>
+
+<div class="modal-bg" id="modal" onclick="hideBukti()">
+  <span class="close" onclick="hideBukti()">&times;</span>
+  <img id="modal-img" src="" alt="bukti">
+</div>
+
+<script>
+function showBukti(src){
+  document.getElementById('modal-img').src = src;
+  document.getElementById('modal').classList.add('show');
+}
+function hideBukti(){
+  document.getElementById('modal').classList.remove('show');
+}
+</script>
+{% endblock %}

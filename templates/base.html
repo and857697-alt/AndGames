@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a15">
+<title>{% block title %}AndGames{% endblock %}</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+<style>
+  :root{
+    --bg:#0a0a15;
+    --bg-2:#12121f;
+    --card:#161624;
+    --card-2:#1c1c2e;
+    --border:#2a2a40;
+    --border-2:#3a3a55;
+    --text:#f1f5f9;
+    --text-2:#cbd5e1;
+    --muted:#8892a8;
+    --primary:#8b5cf6;
+    --primary-2:#a855f7;
+    --primary-glow:rgba(139,92,246,.4);
+    --blue:#3b82f6;
+    --green:#10b981;
+    --red:#ef4444;
+    --amber:#f59e0b;
+    --gold:#fbbf24;
+    --grad-1:linear-gradient(135deg,#8b5cf6,#3b82f6);
+    --grad-2:linear-gradient(135deg,#a855f7,#ec4899);
+    --grad-3:linear-gradient(135deg,#10b981,#3b82f6);
+    --radius:16px;
+    --radius-sm:10px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    max-width:480px;margin:0 auto;padding:0 0 96px;
+    background:var(--bg);color:var(--text);min-height:100vh;
+    background-image:
+      radial-gradient(circle at 20% 0%,rgba(139,92,246,.15),transparent 40%),
+      radial-gradient(circle at 80% 100%,rgba(59,130,246,.12),transparent 40%);
+    background-attachment:fixed;
+    animation:fadeIn .4s ease;
+  }
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @keyframes slideDown{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
+  @keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 var(--primary-glow)}50%{box-shadow:0 0 0 8px transparent}}
+  @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* HEADER */
+  .app-header{
+    position:sticky;top:0;z-index:50;
+    background:rgba(10,10,21,.85);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--border);
+    padding:12px 16px;display:flex;justify-content:space-between;
+    align-items:center;gap:10px;
+  }
+  .app-header .brand{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+  .app-header .brand svg{width:24px;height:24px;flex-shrink:0}
+  .app-header h1{
+    font-size:16px;margin:0;font-weight:700;letter-spacing:.3px;
+    background:var(--grad-1);-webkit-background-clip:text;
+    background-clip:text;-webkit-text-fill-color:transparent;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .saldo-chip{
+    display:flex;align-items:center;gap:5px;
+    background:var(--card-2);border:1px solid var(--border-2);
+    padding:5px 10px;border-radius:20px;font-size:12px;
+    font-weight:600;color:var(--gold);white-space:nowrap;
+    transition:.2s;
+  }
+  .saldo-chip svg{width:14px;height:14px}
+
+  /* BELL */
+  .bell-btn{
+    display:flex;align-items:center;justify-content:center;
+    width:36px;height:36px;border-radius:10px;
+    background:rgba(255,255,255,.1);
+    color:#fff;text-decoration:none;
+    transition:.2s;flex-shrink:0;
+    margin-left:6px;font-size:18px;
+    position:relative;
+  }
+  .bell-btn:hover{background:rgba(255,255,255,.2);text-decoration:none;color:#fff}
+  .bell-badge{
+    position:absolute;top:-4px;right:-4px;
+    background:linear-gradient(135deg,#ef4444,#dc2626);
+    color:#fff;font-size:9px;font-weight:800;
+    min-width:16px;height:16px;padding:0 4px;
+    border-radius:10px;display:flex;align-items:center;justify-content:center;
+    border:2px solid var(--bg);
+  }
+
+  /* LAYOUT */
+  .app-body{padding:14px}
+  .card{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:16px;margin-bottom:14px;
+    transition:.25s;
+  }
+  .card:hover{border-color:var(--border-2);transform:translateY(-1px)}
+  h2{font-size:17px;margin:0 0 10px;font-weight:700;letter-spacing:.2px}
+  h3{font-size:14px;margin:16px 0 10px;font-weight:600;color:var(--text-2);
+     text-transform:uppercase;letter-spacing:.8px}
+
+  /* FORM */
+  input,select,button,textarea{
+    width:100%;padding:12px 14px;margin:6px 0;
+    border:1px solid var(--border);border-radius:var(--radius-sm);
+    font-size:14px;background:var(--card-2);color:var(--text);
+    transition:.2s;font-family:inherit;
+  }
+  input::placeholder,textarea::placeholder{color:var(--muted)}
+  input:focus,select:focus,textarea:focus{
+    outline:none;border-color:var(--primary);
+    box-shadow:0 0 0 3px rgba(139,92,246,.2);
+    background:var(--card);
+  }
+  select{cursor:pointer;appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238892a8' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;
+  }
+  button{
+    background:var(--grad-1);color:#fff;border:0;border-radius:var(--radius-sm);
+    font-weight:600;cursor:pointer;transition:.15s;position:relative;
+    overflow:hidden;font-family:inherit;letter-spacing:.3px;
+  }
+  button:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(139,92,246,.35)}
+  button:active{transform:translateY(0) scale(.98)}
+  button:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  button.ghost{background:transparent;color:var(--primary);border:1.5px solid var(--primary)}
+  button.ghost:hover{background:rgba(139,92,246,.1);box-shadow:none}
+  button.danger{background:linear-gradient(135deg,#ef4444,#dc2626)}
+  button.danger:hover{box-shadow:0 6px 18px rgba(239,68,68,.35)}
+  button.success{background:linear-gradient(135deg,#10b981,#059669)}
+  button.success:hover{box-shadow:0 6px 18px rgba(16,185,129,.35)}
+  button.small{width:auto;padding:6px 12px;font-size:12px;margin:0}
+  button.loading::after{
+    content:"";position:absolute;top:50%;left:50%;width:16px;height:16px;
+    margin:-8px 0 0 -8px;border:2px solid rgba(255,255,255,.3);
+    border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;
+  }
+  button.loading{color:transparent !important;pointer-events:none}
+
+  /* FLASH */
+  .flash{
+    background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(251,191,36,.08));
+    color:#fbbf24;border:1px solid rgba(245,158,11,.3);
+    padding:12px 16px;border-radius:var(--radius-sm);
+    margin:10px 14px;font-size:13px;font-weight:500;
+    display:flex;align-items:flex-start;gap:10px;
+    animation:slideDown .3s ease;
+  }
+  .flash::before{content:"⚠";font-size:16px;line-height:1}
+
+  /* TABLE */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  td,th{border-bottom:1px solid var(--border);padding:10px 8px;text-align:left}
+  th{background:var(--card-2);font-weight:600;color:var(--muted);
+     font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  tr:last-child td{border-bottom:0}
+  tr:hover td{background:rgba(139,92,246,.05)}
+  .wrap{overflow-x:auto;border-radius:var(--radius);background:var(--card);
+        border:1px solid var(--border);margin-bottom:14px}
+
+  /* MISC */
+  .row{display:flex;gap:10px}
+  .row > *{flex:1}
+  .muted{color:var(--muted);font-size:12px}
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;
+         font-size:11px;font-weight:700;letter-spacing:.3px;text-transform:uppercase}
+  .badge.pending{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+  .badge.approved{background:rgba(16,185,129,.15);color:#34d399;border:1px solid rgba(16,185,129,.3)}
+  .badge.rejected{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3)}
+  .badge.expired{background:rgba(136,146,168,.15);color:var(--muted);border:1px solid rgba(136,146,168,.3)}
+  .empty{text-align:center;color:var(--muted);padding:32px 12px;font-size:13px}
+  a{color:var(--primary);text-decoration:none;transition:.15s}
+  a:hover{color:var(--primary-2);text-decoration:none}
+  .big-saldo{
+    font-size:28px;font-weight:800;margin:4px 0;
+    background:var(--grad-1);-webkit-background-clip:text;
+    background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .mini-nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .mini-nav a{
+    padding:7px 14px;border-radius:20px;background:var(--card);
+    font-size:13px;border:1px solid var(--border);color:var(--text-2);
+    font-weight:500;
+  }
+  .mini-nav a.active{background:var(--grad-1);color:#fff;border-color:transparent}
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:var(--bg-2)}
+  ::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:3px}
+
+  /* MODAL */
+  .modal-bg{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    z-index:9999;align-items:center;justify-content:center;padding:16px;
+    animation:fadeIn .2s;
+  }
+  .modal-bg.show{display:flex}
+  .modal-box{
+    background:var(--card);border:1px solid var(--border-2);
+    border-radius:var(--radius);padding:22px;max-width:360px;width:100%;
+    text-align:center;animation:slideDown .25s ease;
+  }
+  .modal-box h3{margin:0 0 8px;font-size:17px;text-transform:none;letter-spacing:0}
+  .modal-box p{color:var(--muted);font-size:13px;margin:0 0 18px}
+
+  /* BOTTOM NAV BADGE */
+  .nav-badge{
+    position:absolute;top:0;right:calc(50% - 20px);
+    background:linear-gradient(135deg,#ef4444,#dc2626);
+    color:#fff;font-size:9px;font-weight:800;
+    min-width:16px;height:16px;padding:0 4px;
+    border-radius:10px;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 6px rgba(239,68,68,.5);z-index:2;
+  }
+</style>
+{% block head %}{% endblock %}
+</head>
+<body>
+
+{% block header %}
+<div class="app-header">
+  <div class="brand">
+    {% block header_left %}
+    <svg viewBox="0 0 24 24" fill="none" stroke="url(#g1)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <defs>
+        <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#8b5cf6"/>
+          <stop offset="100%" stop-color="#3b82f6"/>
+        </linearGradient>
+      </defs>
+      <line x1="6" y1="12" x2="10" y2="12"/>
+      <line x1="8" y1="10" x2="8" y2="14"/>
+      <line x1="15" y1="13" x2="15.01" y2="13"/>
+      <line x1="18" y1="11" x2="18.01" y2="11"/>
+      <rect x="2" y="6" width="20" height="12" rx="4"/>
+    </svg>
+    <h1>{% block header_title %}AndGames{% endblock %}</h1>
+    {% endblock %}
+  </div>
+  {% block header_right %}{% endblock %}
+  {% if session.get("role") == "user" %}
+  <a href="{{ url_for('user_notif') }}" class="bell-btn" title="Notifikasi">
+    🔔
+    <span class="bell-badge" id="headerNotifBadge" style="display:none">0</span>
+  </a>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% for m in get_flashed_messages() %}<div class="flash">{{ m }}</div>{% endfor %}
+
+<div class="app-body">
+{% block content %}{% endblock %}
+</div>
+
+{% block bottomnav %}{% endblock %}
+
+<div class="modal-bg" id="global-confirm">
+  <div class="modal-box">
+    <h3>Konfirmasi</h3>
+    <p></p>
+    <div class="row">
+      <button class="ghost" data-act="no">Batal</button>
+      <button class="danger" data-act="yes">Ya, Lanjut</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Ripple effect pada button
+document.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  const r = document.createElement('span');
+  const rect = b.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  r.style.cssText = `position:absolute;border-radius:50%;background:rgba(255,255,255,.35);pointer-events:none;transform:scale(0);animation:ripple .6s ease-out;width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+  b.appendChild(r);
+  setTimeout(() => r.remove(), 600);
+});
+// Loading state saat submit form
+document.addEventListener('submit', e => {
+  const btn = e.target.querySelector('button[type=submit],button:not([type])');
+  if (btn && !btn.classList.contains('loading')) {
+    btn.classList.add('loading');
+    setTimeout(() => btn.classList.remove('loading'), 5000);
+  }
+});
+// Konfirmasi modal
+function confirmModal(msg, onOk) {
+  const m = document.getElementById('global-confirm');
+  if (!m) { if (confirm(msg)) onOk(); return; }
+  m.querySelector('.modal-box p').textContent = msg;
+  m.classList.add('show');
+  m.querySelector('[data-act=yes]').onclick = () => { m.classList.remove('show'); onOk(); };
+  m.querySelector('[data-act=no]').onclick = () => m.classList.remove('show');
+}
+
+// ===== LIVE SALDO + NOTIF POLLING =====
+(function(){
+  const isUser = {{ 'true' if session.get("role") == "user" else 'false' }};
+  if (!isUser) return;
+
+  function fmt(n){
+    return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  // --- Saldo ---
+  function refreshSaldo(){
+    fetch('{{ url_for("user_saldo") }}')
+      .then(r => r.json())
+      .then(d => {
+        if (typeof d.saldo === 'undefined') return;
+        document.querySelectorAll('.saldo-chip').forEach(el => {
+          const svg = el.querySelector('svg');
+          if (svg) {
+            while (svg.nextSibling) svg.nextSibling.remove();
+            svg.insertAdjacentText('afterend', ' Rp ' + fmt(d.saldo));
+          }
+        });
+        const live = document.getElementById('saldoLive');
+        if (live) live.textContent = 'Rp ' + fmt(d.saldo);
+      })
+      .catch(()=>{});
+  }
+
+  // --- Notif ---
+  function refreshNotif(){
+    fetch('{{ url_for("user_notif_count") }}')
+      .then(r => r.json())
+      .then(d => {
+        const count = d.count || 0;
+        ['headerNotifBadge','notifBadge','homeNotifBadge','profilNotifBadge'].forEach(id => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          if (count > 0) {
+            el.textContent = count > 99 ? '99+' : count;
+            el.style.display = (id === 'profilNotifBadge') ? 'inline-flex' : 'flex';
+          } else {
+            el.style.display = 'none';
+          }
+        });
+      })
+      .catch(()=>{});
+  }
+
+  // expose ke window biar bisa dipanggil dari halaman lain
+  window.refreshSaldo = refreshSaldo;
+  window.refreshNotif = refreshNotif;
+
+  refreshSaldo();
+  refreshNotif();
+  setInterval(refreshSaldo, 30000);
+  setInterval(refreshNotif, 30000);	
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) { refreshSaldo(); refreshNotif(); }
+  });
+})();
+</script>
+<style>
+@keyframes ripple{to{transform:scale(2.5);opacity:0}}
+</style>
+
+</body>
+</html>

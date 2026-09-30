@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Withdraw - AndGames{% endblock %}
+{% block header_title %}Withdraw{% endblock %}
+{% block header_right %}
+  <div class="saldo-chip">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M14.5 9.5c-.5-.5-1.5-1-2.5-1s-2.5.5-2.5 1.5S10.5 11.5 12 11.5s2.5.5 2.5 1.5-1.5 1.5-2.5 1.5-2-.5-2.5-1"/>
+    </svg>
+    Rp {{ "{:,.0f}".format(u.saldo).replace(",",".") }}
+  </div>
+{% endblock %}
+
+{% block head %}
+<style>
+  .wd-hero{
+    background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(239,68,68,.1));
+    border:1px solid rgba(251,191,36,.3);
+    border-radius:var(--radius);padding:18px;margin-bottom:16px;
+    display:flex;align-items:center;gap:14px;
+  }
+  .wd-hero .icon{
+    width:48px;height:48px;border-radius:14px;flex-shrink:0;
+    background:linear-gradient(135deg,#fbbf24,#f59e0b);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 20px rgba(251,191,36,.35);
+  }
+  .wd-hero .icon svg{width:24px;height:24px;stroke:#fff;stroke-width:2.2}
+  .wd-hero h3{margin:0 0 3px;font-size:15px;font-weight:700;
+    color:var(--text);text-transform:none;letter-spacing:0}
+  .wd-hero p{margin:0;font-size:12px;color:var(--muted);line-height:1.5}
+
+  .saldo-display{
+    background:var(--card-2);border:1px solid var(--border-2);
+    border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:12px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .saldo-display .k{font-size:12px;color:var(--muted);font-weight:600;
+    text-transform:uppercase;letter-spacing:.8px}
+  .saldo-display .v{font-size:18px;font-weight:800;
+    background:var(--grad-1);-webkit-background-clip:text;
+    background-clip:text;-webkit-text-fill-color:transparent}
+
+  .amount-input-wrap{position:relative;margin:10px 0}
+  .amount-input-wrap .prefix{
+    position:absolute;left:16px;top:50%;transform:translateY(-50%);
+    font-size:16px;font-weight:700;color:var(--primary-2);
+    pointer-events:none;
+  }
+  .amount-input-wrap input{
+    padding-left:48px !important;font-size:18px;font-weight:700;
+    letter-spacing:.5px;
+  }
+  .amount-input-wrap .max-btn{
+    position:absolute;right:8px;top:50%;transform:translateY(-50%);
+    background:var(--grad-1);color:#fff;border:0;border-radius:8px;
+    padding:6px 12px;font-size:11px;font-weight:800;
+    cursor:pointer;width:auto;margin:0;
+    letter-spacing:.5px;
+  }
+  .amount-input-wrap .max-btn:hover{transform:translateY(-50%) scale(1.05);
+    box-shadow:0 4px 12px rgba(139,92,246,.4)}
+  .amount-input-wrap input{padding-right:70px !important}
+
+  .quick-amount{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}
+  .quick-amount button{
+    flex:1;min-width:70px;width:auto;margin:0;padding:10px 6px;
+    background:var(--card-2);border:1px solid var(--border-2);
+    color:var(--text-2);font-size:12px;font-weight:700;
+    transition:.2s;
+  }
+  .quick-amount button:hover{
+    background:rgba(139,92,246,.15);border-color:var(--primary);
+    color:var(--primary-2);transform:translateY(-1px);box-shadow:none;
+  }
+
+  .info-warning{
+    background:rgba(245,158,11,.08);
+    border:1px solid rgba(245,158,11,.25);
+    border-radius:var(--radius-sm);padding:11px 14px;
+    font-size:12px;color:#fbbf24;line-height:1.6;
+    margin-bottom:14px;
+    display:flex;gap:10px;align-items:flex-start;
+  }
+  .info-warning::before{content:"⚠";font-size:15px;line-height:1;flex-shrink:0}
+
+  .riwayat-list{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);overflow:hidden;margin-bottom:14px;
+  }
+  .riwayat-item{
+    display:flex;align-items:center;gap:12px;
+    padding:14px;border-bottom:1px solid var(--border);
+    transition:.2s;
+  }
+  .riwayat-item:last-child{border-bottom:0}
+  .riwayat-item:hover{background:rgba(139,92,246,.04)}
+  .riwayat-item .ic{
+    width:38px;height:38px;border-radius:11px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(251,191,36,.15);color:#fbbf24;
+  }
+  .riwayat-item .ic svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.2}
+  .riwayat-item .info{flex:1;min-width:0}
+  .riwayat-item .jt{font-size:13px;font-weight:700;margin-bottom:3px}
+  .riwayat-item .waktu{font-size:11px;color:var(--muted)}
+  .riwayat-item .right{text-align:right;flex-shrink:0}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="wd-hero">
+  <div class="icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 17l9.2-9.2M17 17V7H7"/>
+    </svg>
+  </div>
+  <div>
+    <h3>Tarik Saldo</h3>
+    <p>Minimal Rp {{ "{:,.0f}".format(min_withdraw).replace(",",".") }} ke {{ u.provider }}</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="saldo-display">
+    <div class="k">Saldo Tersedia</div>
+    <div class="v">Rp {{ "{:,.0f}".format(u.saldo).replace(",",".") }}</div>
+  </div>
+
+  <form method="post" action="{{ url_for('user_withdraw') }}">
+    <div class="amount-input-wrap">
+      <span class="prefix">Rp</span>
+      <input name="jumlah" id="jumlah" inputmode="numeric" placeholder="0" required>
+      <button type="button" class="max-btn" onclick="setMax()">MAX</button>
+    </div>
+
+    <div class="quick-amount">
+      <button type="button" onclick="setAmt(50000)">50 rb</button>
+      <button type="button" onclick="setAmt(100000)">100 rb</button>
+      <button type="button" onclick="setAmt(200000)">200 rb</button>
+      <button type="button" onclick="setAmt(500000)">500 rb</button>
+    </div>
+
+    <div class="info-warning">
+      Saldo langsung dipotong saat request. Akan dikembalikan jika admin menolak.
+    </div>
+
+    <button>
+      Kirim Permintaan
+      <svg style="width:14px;height:14px;display:inline;margin-left:4px;vertical-align:-2px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"/>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+  </form>
+</div>
+
+<h3>Riwayat Withdraw</h3>
+{% if tx %}
+<div class="riwayat-list">
+  {% for t in tx %}
+  <div class="riwayat-item">
+    <div class="ic">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 17l9.2-9.2M17 17V7H7"/>
+      </svg>
+    </div>
+    <div class="info">
+      <div class="jt">Rp {{ "{:,.0f}".format(t.jumlah).replace(",",".") }}</div>
+      <div class="waktu">{{ t.created_at }}</div>
+    </div>
+    <div class="right">
+      <span class="badge {{ t.status }}">{{ t.status }}</span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">Belum ada withdraw.</div>
+{% endif %}
+
+<script>
+const SALDO = {{ u.saldo }};
+
+function setAmt(n){
+  document.getElementById('jumlah').value = n;
+}
+function setMax(){
+  const max = Math.floor(SALDO / 1000) * 1000;
+  document.getElementById('jumlah').value = max >= {{ min_withdraw }} ? max : '';
+}
+document.getElementById('jumlah').addEventListener('input', e => {
+  e.target.value = e.target.value.replace(/\D/g, '');
+});
+</script>
+
+{% endblock %}
+
+{% block bottomnav %}{% include "partials/bottomnav.html" %}{% endblock %}

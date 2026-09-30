@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Scan QR - AndGames{% endblock %}
+{% block header_title %}Scan QRIS{% endblock %}
+
+{% block head %}
+<style>
+  .qr-wrap{text-align:center;padding:14px 0}
+  .qr-img{
+    width:240px;height:240px;object-fit:contain;background:#fff;
+    border-radius:12px;border:1px solid var(--border);padding:8px;
+    margin:0 auto;display:block;
+  }
+  .nominal{
+    font-size:28px;font-weight:700;color:var(--primary);
+    margin:14px 0 4px;letter-spacing:.5px;
+  }
+  .timer{
+    font-size:32px;font-weight:700;font-variant-numeric:tabular-nums;
+    color:var(--green);margin:6px 0;
+  }
+  .timer.warn{color:var(--amber)}
+  .timer.danger{color:var(--red);animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.4}}
+  .instruksi{
+    background:#f8fafc;border-radius:10px;padding:12px;
+    font-size:13px;color:var(--muted);text-align:left;margin-top:14px;
+  }
+  .instruksi ol{margin:6px 0 0;padding-left:18px}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="card">
+  <div class="qr-wrap">
+    <div class="muted">Transfer sesuai nominal:</div>
+    <div class="nominal">Rp {{ "{:,.0f}".format(t.jumlah).replace(",",".") }}</div>
+
+    <img src="{{ url_for('static', filename='qris.png') }}" alt="QRIS" class="qr-img">
+
+    <div class="muted" style="margin-top:12px">Sisa waktu:</div>
+    <div class="timer" id="timer">03:00</div>
+  </div>
+
+  <div class="instruksi">
+    <b>Cara transfer:</b>
+    <ol>
+      <li>Buka aplikasi bank / e-wallet kamu</li>
+      <li>Pilih menu <b>Scan QR / QRIS</b></li>
+      <li>Scan gambar QR di atas</li>
+      <li>Masukkan nominal <b>Rp {{ "{:,.0f}".format(t.jumlah).replace(",",".") }}</b></li>
+      <li>Konfirmasi & simpan bukti transfer</li>
+    </ol>
+  </div>
+</div>
+
+<div id="actions">
+  <a href="{{ url_for('user_deposit_upload', tid=t.id) }}">
+    <button class="success">Saya Sudah Transfer →</button>
+  </a>
+  <form method="post" action="{{ url_for('user_deposit_batal', tid=t.id) }}"
+        onsubmit="return confirm('Batalkan deposit ini?')">
+    <button class="ghost" style="color:var(--red);border-color:var(--red)">Batal</button>
+  </form>
+</div>
+
+<div id="expired" style="display:none">
+  <div class="card" style="text-align:center">
+    <div style="font-size:36px">⏰</div>
+    <h3 style="color:var(--red)">Waktu Habis</h3>
+    <p class="muted">QR sudah kadaluarsa. Silakan buat deposit baru.</p>
+    <a href="{{ url_for('user_deposit') }}"><button>Kembali ke Deposit</button></a>
+  </div>
+</div>
+
+<script>
+(function(){
+  const expiredAt = new Date("{{ t.expired_at }}".replace(" ", "T"));
+  const timerEl = document.getElementById('timer');
+  const actionsEl = document.getElementById('actions');
+  const expiredEl = document.getElementById('expired');
+
+  function tick(){
+    const now = new Date();
+    let sisa = Math.floor((expiredAt - now) / 1000);
+    if (sisa <= 0) {
+      timerEl.textContent = "00:00";
+      timerEl.classList.add('danger');
+      actionsEl.style.display = 'none';
+      expiredEl.style.display = 'block';
+      return;
+    }
+    const m = String(Math.floor(sisa / 60)).padStart(2, '0');
+    const s = String(sisa % 60).padStart(2, '0');
+    timerEl.textContent = m + ":" + s;
+    timerEl.classList.toggle('warn', sisa <= 60 && sisa > 30);
+    timerEl.classList.toggle('danger', sisa <= 30);
+    setTimeout(tick, 1000);
+  }
+  tick();
+})();
+</script>
+
+{% endblock %}
+
+{% block bottomnav %}{% include "partials/bottomnav.html" %}{% endblock %}

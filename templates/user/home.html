@@ -1,0 +1,506 @@
+{% extends "base.html" %}
+{% block title %}Home - AndGames{% endblock %}
+{% block header_title %}AndGames{% endblock %}
+{% block header_right %}
+  <div class="saldo-chip">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M14.5 9.5c-.5-.5-1.5-1-2.5-1s-2.5.5-2.5 1.5S10.5 11.5 12 11.5s2.5.5 2.5 1.5-1.5 1.5-2.5 1.5-2-.5-2.5-1"/>
+    </svg>
+    Rp {{ "{:,.0f}".format(u.saldo).replace(",",".") }}
+  </div>
+{% endblock %}
+
+{% block head %}
+<style>
+  /* ===== HELLO ===== */
+  .hello{margin-bottom:16px}
+  .hello .greet{font-size:13px;color:var(--muted)}
+  .hello .name{
+    font-size:22px;font-weight:800;letter-spacing:.3px;
+    background:var(--grad-1);-webkit-background-clip:text;
+    background-clip:text;-webkit-text-fill-color:transparent;
+  }
+
+  /* ===== CAROUSEL UPGRADE ===== */
+  .carousel{
+    position:relative;overflow:hidden;border-radius:20px;
+    margin-bottom:16px;
+    box-shadow:0 12px 40px rgba(139,92,246,.28),
+               0 2px 8px rgba(0,0,0,.4);
+    border:1px solid rgba(139,92,246,.25);
+    isolation:isolate;
+  }
+  .carousel::after{
+    content:"";position:absolute;inset:0;border-radius:20px;
+    pointer-events:none;z-index:10;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
+  }
+
+  /* Progress bar di atas */
+  .carousel-progress{
+    position:absolute;top:0;left:0;right:0;height:3px;
+    background:rgba(0,0,0,.25);z-index:15;
+    display:flex;gap:3px;padding:0;overflow:hidden;
+  }
+  .carousel-progress .bar{
+    flex:1;height:100%;background:rgba(255,255,255,.2);
+    position:relative;overflow:hidden;
+  }
+  .carousel-progress .bar .fill{
+    position:absolute;inset:0;width:0%;
+    background:linear-gradient(90deg,#fbbf24,#f59e0b);
+    box-shadow:0 0 10px rgba(251,191,36,.7);
+  }
+  .carousel-progress .bar.active .fill{
+    animation:fillBar 4.5s linear forwards;
+  }
+  @keyframes fillBar{from{width:0%}to{width:100%}}
+
+  .slides{
+    display:flex;
+    transition:transform .6s cubic-bezier(.4,0,.2,1);
+    touch-action:pan-y;
+  }
+  .slide{
+    min-width:100%;padding:28px 24px 32px;color:#fff;
+    min-height:170px;position:relative;overflow:hidden;
+    display:flex;flex-direction:column;justify-content:center;
+  }
+
+  /* Pattern shine */
+  .slide::before{
+    content:"";position:absolute;top:0;left:-100%;width:60%;height:100%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);
+    animation:shine 4s ease-in-out infinite;
+    pointer-events:none;z-index:2;
+  }
+  @keyframes shine{
+    0%, 60%{left:-100%}
+    100%{left:200%}
+  }
+
+  /* Emoji besar di kanan */
+  .slide .bg-emoji{
+    position:absolute;right:-16px;bottom:-16px;
+    font-size:140px;line-height:1;opacity:.15;
+    transform:rotate(-12deg);
+    filter:drop-shadow(0 4px 12px rgba(0,0,0,.3));
+    pointer-events:none;z-index:1;
+    user-select:none;
+  }
+
+  /* Bulatan glow di kanan atas */
+  .slide::after{
+    content:"";position:absolute;top:-50%;right:-30%;
+    width:220px;height:220px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,255,255,.25),transparent 70%);
+    pointer-events:none;z-index:1;
+  }
+
+  .slide .slide-body{position:relative;z-index:3;max-width:75%}
+
+  .slide .slide-tag{
+    display:inline-block;padding:3px 10px;border-radius:20px;
+    background:rgba(0,0,0,.25);backdrop-filter:blur(6px);
+    font-size:9px;font-weight:800;letter-spacing:1px;
+    text-transform:uppercase;margin-bottom:10px;
+    border:1px solid rgba(255,255,255,.2);
+  }
+
+  .slide h3{
+    margin:0 0 8px;font-size:22px;color:#fff;font-weight:800;
+    letter-spacing:-.3px;line-height:1.15;
+    text-shadow:0 2px 12px rgba(0,0,0,.35);
+  }
+  .slide p{
+    margin:0;font-size:13px;opacity:.95;line-height:1.5;
+    text-shadow:0 1px 4px rgba(0,0,0,.25);
+  }
+
+  /* Text animation */
+  .slide.active .slide-tag,
+  .slide.active h3,
+  .slide.active p{
+    animation:slideUp .6s cubic-bezier(.4,0,.2,1) both;
+  }
+  .slide.active .slide-tag{animation-delay:.05s}
+  .slide.active h3{animation-delay:.15s}
+  .slide.active p{animation-delay:.25s}
+  @keyframes slideUp{
+    from{opacity:0;transform:translateY(20px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+
+  /* Dots di bawah */
+  .dots{
+    position:absolute;bottom:14px;left:0;right:0;
+    display:flex;justify-content:center;gap:6px;z-index:15;
+  }
+  .dots span{
+    width:7px;height:7px;border-radius:50%;
+    background:rgba(255,255,255,.45);cursor:pointer;
+    transition:.25s;
+  }
+  .dots span.active{
+    background:#fff;width:24px;border-radius:4px;
+    box-shadow:0 0 10px rgba(255,255,255,.8);
+  }
+
+  /* ===== SALDO CARD ===== */
+  .saldo-card{
+    background:linear-gradient(135deg,#8b5cf6 0%,#6366f1 50%,#3b82f6 100%);
+    border-radius:var(--radius);padding:22px;margin-bottom:18px;
+    position:relative;overflow:hidden;
+    box-shadow:0 10px 32px rgba(139,92,246,.35);
+  }
+  .saldo-card::before{
+    content:"";position:absolute;top:-50%;right:-30%;
+    width:200px;height:200px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%);
+    pointer-events:none;
+  }
+  .saldo-card .lbl{
+    font-size:12px;opacity:.85;font-weight:600;
+    text-transform:uppercase;letter-spacing:1px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .saldo-card .lbl svg{width:14px;height:14px}
+  .saldo-card .val{
+    font-size:32px;font-weight:800;margin:8px 0 16px;
+    letter-spacing:-.5px;line-height:1;
+    text-shadow:0 2px 12px rgba(0,0,0,.2);
+  }
+  .saldo-card .actions{display:flex;gap:10px;position:relative;z-index:1}
+  .saldo-card .actions a{
+    flex:1;text-align:center;padding:11px;border-radius:12px;
+    background:rgba(255,255,255,.18);color:#fff;font-size:13px;font-weight:700;
+    text-decoration:none;backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,.22);
+    transition:.2s;display:flex;align-items:center;justify-content:center;gap:6px;
+  }
+  .saldo-card .actions a:hover{
+    background:rgba(255,255,255,.3);color:#fff;transform:translateY(-1px);
+  }
+  .saldo-card .actions a svg{width:14px;height:14px}
+
+  /* ===== QUICK MENU ===== */
+  .quick{display:flex;gap:10px;margin-bottom:18px}
+  .quick a{
+    flex:1;background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:14px 8px;text-align:center;
+    text-decoration:none;color:var(--text-2);transition:.2s;
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+  }
+  .quick a:hover{
+    border-color:var(--primary);transform:translateY(-2px);
+    box-shadow:0 6px 20px rgba(139,92,246,.18);
+  }
+  .quick a .qi{
+    width:36px;height:36px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,rgba(139,92,246,.2),rgba(59,130,246,.1));
+    color:var(--primary-2);
+  }
+  .quick a .qi svg{width:18px;height:18px;stroke-width:2}
+  .quick a span{font-size:11px;font-weight:600;letter-spacing:.2px}
+
+  /* ===== BONUS CTA ===== */
+  .bonus-cta{
+    display:flex;align-items:center;gap:14px;
+    background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(239,68,68,.08));
+    border:1px solid rgba(251,191,36,.35);
+    border-radius:var(--radius);padding:16px 18px;
+    text-decoration:none;color:var(--text);
+    position:relative;overflow:hidden;transition:.25s;
+    margin-bottom:14px;
+  }
+  .bonus-cta:hover{
+    border-color:#fbbf24;transform:translateY(-2px);
+    box-shadow:0 12px 32px rgba(251,191,36,.3);
+    text-decoration:none;color:var(--text);
+  }
+  .bonus-cta-glow{
+    position:absolute;top:-50%;right:-20%;
+    width:180px;height:180px;border-radius:50%;
+    background:radial-gradient(circle,rgba(251,191,36,.35),transparent 70%);
+    pointer-events:none;animation:pulseGlow 3s ease-in-out infinite;
+  }
+  .bonus-cta .bi{
+    width:52px;height:52px;border-radius:16px;flex-shrink:0;
+    background:linear-gradient(135deg,#fbbf24,#f59e0b);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 24px rgba(251,191,36,.45);
+    position:relative;z-index:1;font-size:26px;
+  }
+  .bonus-cta-body{flex:1;min-width:0;position:relative;z-index:1}
+  .bonus-cta-body .bt{font-size:15px;font-weight:800;margin-bottom:4px}
+  .bonus-cta-body .bs{font-size:12px;color:var(--muted)}
+  .bonus-cta .barrow{font-size:22px;color:#fbbf24;position:relative;z-index:1;font-weight:300}
+
+  /* ===== GAME CTA ===== */
+  .game-cta{
+    display:flex;align-items:center;gap:14px;
+    background:linear-gradient(135deg,rgba(139,92,246,.15),rgba(59,130,246,.08));
+    border:1px solid rgba(139,92,246,.35);
+    border-radius:var(--radius);padding:16px 18px;
+    text-decoration:none;color:var(--text);
+    position:relative;overflow:hidden;transition:.25s;
+  }
+  .game-cta:hover{
+    border-color:var(--primary-2);transform:translateY(-2px);
+    box-shadow:0 12px 32px rgba(139,92,246,.3);
+    text-decoration:none;color:var(--text);
+  }
+  .game-cta-glow{
+    position:absolute;top:-50%;right:-20%;
+    width:180px;height:180px;border-radius:50%;
+    background:radial-gradient(circle,rgba(139,92,246,.35),transparent 70%);
+    pointer-events:none;animation:pulseGlow 3s ease-in-out infinite;
+  }
+  .game-cta .gi{
+    width:52px;height:52px;border-radius:16px;flex-shrink:0;
+    background:var(--grad-1);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 24px rgba(139,92,246,.45);
+    position:relative;z-index:1;
+  }
+  .game-cta .gi svg{width:26px;height:26px;fill:none;stroke:#fff;stroke-width:2;
+    stroke-linecap:round;stroke-linejoin:round}
+  .game-cta-body{flex:1;min-width:0;position:relative;z-index:1}
+  .game-cta-body .gt{font-size:15px;font-weight:800;margin-bottom:4px;color:var(--text)}
+  .game-cta-body .gs{font-size:12px;color:var(--muted)}
+  .game-cta .arrow{font-size:22px;color:var(--primary-2);position:relative;z-index:1;font-weight:300}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="hello">
+  <div class="greet">Selamat datang,</div>
+  <div class="name">{{ u.username }} 👋</div>
+</div>
+
+<div class="carousel" id="carousel">
+  <div class="carousel-progress" id="progress">
+    {% for b in banners %}<div class="bar" data-i="{{ loop.index0 }}"><div class="fill"></div></div>{% endfor %}
+  </div>
+
+  <div class="slides" id="slides">
+    {% for b in banners %}
+    <div class="slide" style="background:linear-gradient(135deg,{{ b.color }},{{ b.color }}cc)">
+      <div class="bg-emoji">
+        {% if loop.index == 1 %}🎮
+        {% elif loop.index == 2 %}💰
+        {% elif loop.index == 3 %}🎁
+        {% else %}🎡{% endif %}
+      </div>
+      <div class="slide-body">
+        <span class="slide-tag">
+          {% if loop.index == 1 %}NEW
+          {% elif loop.index == 2 %}POPULER
+          {% elif loop.index == 3 %}BONUS
+          {% else %}GAME{% endif %}
+        </span>
+        <h3>{{ b.title }}</h3>
+        <p>{{ b.sub }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="dots" id="dots">
+    {% for b in banners %}<span data-i="{{ loop.index0 }}" class="{{ 'active' if loop.first }}"></span>{% endfor %}
+  </div>
+</div>
+
+<div class="saldo-card">
+  <div class="lbl">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M14.5 9.5c-.5-.5-1.5-1-2.5-1s-2.5.5-2.5 1.5S10.5 11.5 12 11.5s2.5.5 2.5 1.5-1.5 1.5-2.5 1.5-2-.5-2.5-1"/>
+    </svg>
+    Saldo Kamu
+  </div>
+  <div class="val">Rp {{ "{:,.0f}".format(u.saldo).replace(",",".") }}</div>
+  <div class="actions">
+    <a href="{{ url_for('user_deposit') }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Deposit
+    </a>
+    <a href="{{ url_for('user_withdraw') }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Withdraw
+    </a>
+  </div>
+</div>
+
+<div class="quick">
+  <a href="{{ url_for('user_riwayat') }}">
+    <div class="qi">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 8v4l3 3M3.05 11a9 9 0 1 1 .5 4M3 4v5h5"/>
+      </svg>
+    </div>
+    <span>Riwayat</span>
+  </a>
+  <a href="{{ url_for('user_profil') }}">
+    <div class="qi">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+    </div>
+    <span>Profil</span>
+  </a>
+  <a href="{{ url_for('user_bonus') }}">
+    <div class="qi">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="8" width="18" height="12" rx="2"/>
+        <path d="M12 8V21M3 12h18"/>
+        <path d="M12 8s-2-4-5-4a2 2 0 0 0 0 4h5zM12 8s2-4 5-4a2 2 0 0 1 0 4h-5z"/>
+      </svg>
+    </div>
+    <span>Bonus</span>
+  </a>
+  <a href="{{ url_for('user_game') }}">
+    <div class="qi">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/>
+        <line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/>
+        <rect x="2" y="6" width="20" height="12" rx="4"/>
+      </svg>
+    </div>
+    <span>Game</span>
+  </a>
+</div>
+
+<h3>🎁 Bonus</h3>
+<a href="{{ url_for('user_bonus') }}" class="bonus-cta">
+  <div class="bonus-cta-glow"></div>
+  <div class="bi">🎁</div>
+  <div class="bonus-cta-body">
+    <div class="bt">Bonus Harian & Spin Gratis</div>
+    <div class="bs">Klaim tiap hari, tukar kode promo!</div>
+  </div>
+  <div class="barrow">→</div>
+</a>
+
+<h3>🎮 Game</h3>
+<a href="{{ url_for('user_game') }}" class="game-cta">
+  <div class="game-cta-glow"></div>
+  <div class="gi">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="6" y1="12" x2="10" y2="12"/>
+      <line x1="8" y1="10" x2="8" y2="14"/>
+      <line x1="15" y1="13" x2="15.01" y2="13"/>
+      <line x1="18" y1="11" x2="18.01" y2="11"/>
+      <rect x="2" y="6" width="20" height="12" rx="4"/>
+    </svg>
+  </div>
+  <div class="game-cta-body">
+    <div class="gt">Mainkan Game Sekarang</div>
+    <div class="gs">💎 Mines • 🎡 Spin Wheel</div>
+  </div>
+  <div class="arrow">→</div>
+</a>
+
+<script>
+(function(){
+  const slides = document.getElementById('slides');
+  const allSlides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('#dots span');
+  const bars = document.querySelectorAll('#progress .bar');
+  const total = dots.length;
+  const DURATION = 4500;
+  let i = 0, timer;
+  let paused = false;
+
+  function go(n){
+    i = (n + total) % total;
+    slides.style.transform = 'translateX(-' + (i*100) + '%)';
+
+    // dots
+    dots.forEach((d,k)=>d.classList.toggle('active', k===i));
+
+    // progress
+    bars.forEach((b,k)=>{
+      b.classList.remove('active');
+      const f = b.querySelector('.fill');
+      f.style.animation = 'none';
+      f.style.width = k < i ? '100%' : '0%';
+      void f.offsetWidth;
+    });
+    const activeBar = bars[i];
+    if (activeBar && !paused) {
+      activeBar.classList.add('active');
+      const f = activeBar.querySelector('.fill');
+      f.style.animation = 'none';
+      f.style.width = '0%';
+      void f.offsetWidth;
+      f.style.animation = 'fillBar ' + DURATION + 'ms linear forwards';
+    }
+
+    // slide active class (untuk animasi text)
+    allSlides.forEach((s,k)=>s.classList.toggle('active', k===i));
+  }
+
+  function next(){ if (!paused) go(i+1); }
+  function start(){ clearInterval(timer); timer = setInterval(next, DURATION); }
+  function stop(){ clearInterval(timer); }
+
+  function pause(){
+    paused = true;
+    stop();
+    const activeBar = bars[i];
+    if (activeBar) {
+      const f = activeBar.querySelector('.fill');
+      f.style.animation = 'none';
+    }
+  }
+  function resume(){
+    paused = false;
+    go(i);
+    start();
+  }
+
+  dots.forEach(d => d.onclick = () => { go(+d.dataset.i); stop(); start(); });
+
+  // swipe
+  let x0 = null, dx = 0;
+  slides.addEventListener('touchstart', e => {
+    x0 = e.touches[0].clientX;
+    dx = 0;
+    pause();
+  }, {passive:true});
+  slides.addEventListener('touchmove', e => {
+    if (x0 === null) return;
+    dx = e.touches[0].clientX - x0;
+    // geser sedikit biar kebayang
+    slides.style.transform = 'translateX(calc(-' + (i*100) + '% + ' + (dx*0.3) + 'px))';
+  }, {passive:true});
+  slides.addEventListener('touchend', () => {
+    if (x0 === null) return;
+    if (Math.abs(dx) > 40) go(i + (dx < 0 ? 1 : -1));
+    else go(i);
+    x0 = null; dx = 0;
+    resume();
+  });
+
+  // visibility pause
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) pause();
+    else resume();
+  });
+
+  go(0);
+  start();
+})();
+</script>
+
+{% endblock %}
+
+{% block bottomnav %}{% include "partials/bottomnav.html" %}{% endblock %}

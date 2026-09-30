@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}Scan QR - AndGames{% endblock %}
+{% block header_title %}Scan QRIS{% endblock %}
+
+{% block head %}
+<style>
+  .qr-card{
+    background:linear-gradient(160deg,var(--card),var(--card-2));
+    border:1px solid var(--border-2);border-radius:var(--radius);
+    padding:20px;text-align:center;margin-bottom:16px;
+    position:relative;overflow:hidden;
+  }
+  .qr-card::before{
+    content:"";position:absolute;top:-60%;right:-30%;
+    width:220px;height:220px;border-radius:50%;
+    background:radial-gradient(circle,rgba(139,92,246,.18),transparent 70%);
+    pointer-events:none;
+  }
+  .qr-label{
+    font-size:11px;color:var(--muted);font-weight:700;
+    text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;
+  }
+  .qr-nominal{
+    font-size:30px;font-weight:800;letter-spacing:-.5px;
+    background:var(--grad-1);-webkit-background-clip:text;
+    background-clip:text;-webkit-text-fill-color:transparent;
+    margin-bottom:16px;line-height:1;
+  }
+  .qr-img-wrap{
+    background:#fff;border-radius:16px;padding:12px;
+    display:inline-block;position:relative;
+    box-shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+  .qr-img{
+    width:220px;height:220px;object-fit:contain;display:block;
+    border-radius:8px;
+  }
+  .qr-corner{
+    position:absolute;width:26px;height:26px;
+    border:3px solid var(--primary-2);pointer-events:none;
+  }
+  .qr-corner.tl{top:6px;left:6px;border-right:0;border-bottom:0;border-radius:8px 0 0 0}
+  .qr-corner.tr{top:6px;right:6px;border-left:0;border-bottom:0;border-radius:0 8px 0 0}
+  .qr-corner.bl{bottom:6px;left:6px;border-right:0;border-top:0;border-radius:0 0 0 8px}
+  .qr-corner.br{bottom:6px;right:6px;border-left:0;border-top:0;border-radius:0 0 8px 0}
+
+  .timer-wrap{margin-top:18px;position:relative;z-index:1}
+  .timer-lbl{font-size:11px;color:var(--muted);font-weight:700;
+    text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+  .timer{
+    font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;
+    color:#34d399;letter-spacing:1px;line-height:1;
+    font-family:'SF Mono',Consolas,monospace;
+    text-shadow:0 0 20px rgba(52,211,153,.4);
+    transition:.3s;
+  }
+  .timer.warn{color:#fbbf24;text-shadow:0 0 20px rgba(251,191,36,.4)}
+  .timer.danger{
+    color:#f87171;text-shadow:0 0 20px rgba(248,113,113,.5);
+    animation:pulse 1s infinite;
+  }
+  @keyframes pulse{50%{opacity:.5}}
+
+  .timer-bar{
+    height:4px;background:var(--border);border-radius:2px;
+    margin-top:8px;overflow:hidden;position:relative;
+  }
+  .timer-bar-fill{
+    height:100%;background:var(--grad-3);border-radius:2px;
+    transition:width 1s linear;
+    box-shadow:0 0 10px rgba(16,185,129,.6);
+  }
+  .timer-bar-fill.warn{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+  .timer-bar-fill.danger{background:linear-gradient(90deg,#ef4444,#f87171)}
+
+  .instruksi{
+    background:var(--card-2);border:1px solid var(--border);
+    border-radius:var(--radius-sm);padding:14px 16px;
+    font-size:13px;color:var(--text-2);text-align:left;
+    margin-bottom:14px;
+  }
+  .instruksi .h{font-size:12px;font-weight:700;color:var(--primary-2);
+    text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+  .instruksi ol{margin:0;padding-left:18px;line-height:1.8}
+  .instruksi ol li{padding-left:4px}
+  .instruksi ol li b{color:var(--text)}
+
+  .expired-box{
+    text-align:center;padding:28px 16px;
+  }
+  .expired-box .ico-big{
+    width:64px;height:64px;border-radius:20px;margin:0 auto 14px;
+    background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);
+    display:flex;align-items:center;justify-content:center;
+    font-size:30px;
+  }
+  .expired-box h3{color:#f87171;font-size:17px;margin:0 0 8px;
+    text-transform:none;letter-spacing:0}
+  .expired-box p{color:var(--muted);font-size:13px;margin:0 0 18px}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div id="active-section">
+  <div class="qr-card">
+    <div class="qr-label">Transfer Sesuai Nominal</div>
+    <div class="qr-nominal">Rp {{ "{:,.0f}".format(t.jumlah).replace(",",".") }}</div>
+
+    <div class="qr-img-wrap">
+      <div class="qr-corner tl"></div>
+      <div class="qr-corner tr"></div>
+      <div class="qr-corner bl"></div>
+      <div class="qr-corner br"></div>
+      <img src="{{ url_for('static', filename='qris.png') }}" alt="QRIS" class="qr-img">
+    </div>
+
+    <div class="timer-wrap">
+      <div class="timer-lbl">Sisa Waktu</div>
+      <div class="timer" id="timer">03:00</div>
+      <div class="timer-bar">
+        <div class="timer-bar-fill" id="timerBar" style="width:100%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="instruksi">
+    <div class="h">📱 Cara Transfer</div>
+    <ol>
+      <li>Buka aplikasi bank / e-wallet kamu</li>
+      <li>Pilih menu <b>Scan QR / QRIS</b></li>
+      <li>Scan gambar QR di atas</li>
+      <li>Masukkan nominal <b>Rp {{ "{:,.0f}".format(t.jumlah).replace(",",".") }}</b></li>
+      <li>Simpan screenshot bukti transfer</li>
+    </ol>
+  </div>
+
+  <a href="{{ url_for('user_deposit_upload', tid=t.id) }}">
+    <button class="success">
+      <svg style="width:16px;height:16px;display:inline;vertical-align:-3px;margin-right:6px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      Saya Sudah Transfer
+    </button>
+  </a>
+
+  <form method="post" action="{{ url_for('user_deposit_batal', tid=t.id) }}"
+        onsubmit="return confirm('Batalkan deposit ini?')">
+    <button class="ghost" style="color:#f87171;border-color:#f87171">
+      Batalkan Deposit
+    </button>
+  </form>
+</div>
+
+<div id="expired-section" style="display:none">
+  <div class="card expired-box">
+    <div class="ico-big">⏰</div>
+    <h3>Waktu Habis</h3>
+    <p>QR sudah kadaluarsa. Silakan buat deposit baru.</p>
+    <a href="{{ url_for('user_deposit') }}"><button>Buat Deposit Baru</button></a>
+  </div>
+</div>
+
+<script>
+(function(){
+  const expiredAt = new Date("{{ t.expired_at }}".replace(" ", "T")).getTime();
+  const totalMs = {{ expire_minutes }} * 60 * 1000;
+  const timerEl = document.getElementById('timer');
+  const barEl = document.getElementById('timerBar');
+  const activeSec = document.getElementById('active-section');
+  const expiredSec = document.getElementById('expired-section');
+
+  function tick(){
+    const now = Date.now();
+    let sisa = Math.floor((expiredAt - now) / 1000);
+    if (sisa <= 0) {
+      timerEl.textContent = "00:00";
+      barEl.style.width = "0%";
+      activeSec.style.display = 'none';
+      expiredSec.style.display = 'block';
+      return;
+    }
+    const m = String(Math.floor(sisa / 60)).padStart(2, '0');
+    const s = String(sisa % 60).padStart(2, '0');
+    timerEl.textContent = m + ":" + s;
+
+    const pct = Math.max(0, Math.min(100, (sisa * 1000 / totalMs) * 100));
+    barEl.style.width = pct + "%";
+
+    timerEl.classList.toggle('warn', sisa <= 90 && sisa > 30);
+    timerEl.classList.toggle('danger', sisa <= 30);
+    barEl.classList.toggle('warn', sisa <= 90 && sisa > 30);
+    barEl.classList.toggle('danger', sisa <= 30);
+
+    setTimeout(tick, 1000);
+  }
+  tick();
+})();
+</script>
+
+{% endblock %}
+
+{% block bottomnav %}{% include "partials/bottomnav.html" %}{% endblock %}

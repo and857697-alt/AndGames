@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Override User - Admin{% endblock %}
+{% block header_title %}👥 Override User{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('admin_game') }}" style="color:var(--primary-2);font-size:12px;font-weight:700;text-decoration:none">← Setelan</a>
+{% endblock %}
+
+{% block head %}
+<style>
+  .info-banner{
+    background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);
+    border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;
+    color:var(--text-2);line-height:1.6;margin-bottom:14px;
+  }
+  .info-banner b{color:var(--primary-2)}
+
+  .user-row{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:14px;margin-bottom:10px;
+    transition:.2s;
+  }
+  .user-row:hover{border-color:var(--border-2)}
+  .user-row.overridden{border-color:rgba(139,92,246,.4);
+    background:linear-gradient(135deg,rgba(139,92,246,.05),var(--card))}
+  .user-row.blocked{border-color:rgba(239,68,68,.4);
+    background:linear-gradient(135deg,rgba(239,68,68,.05),var(--card))}
+
+  .user-head{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    gap:10px;margin-bottom:10px;
+  }
+  .user-head .uinfo{flex:1;min-width:0}
+  .user-head .un{font-size:14px;font-weight:700;margin-bottom:2px}
+  .user-head .ue{font-size:11px;color:var(--muted);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .user-head .badge-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+  .user-head .tag{
+    font-size:9px;padding:2px 8px;border-radius:20px;
+    font-weight:700;letter-spacing:.3px;
+  }
+  .user-head .tag.win{background:rgba(16,185,129,.15);color:#34d399}
+  .user-head .tag.lose{background:rgba(239,68,68,.15);color:#f87171}
+  .user-head .tag.blocked{background:rgba(239,68,68,.2);color:#f87171}
+  .user-head .tag.custom{background:rgba(139,92,246,.15);color:#a855f7}
+
+  .user-form{
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;
+    padding-top:10px;border-top:1px solid var(--border);
+  }
+  .user-form .full{grid-column:1/-1}
+  .user-form label{font-size:10px;color:var(--muted);font-weight:700;
+    text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;
+    display:block}
+  .user-form input,.user-form select{
+    margin:0;padding:8px 10px;font-size:12px;
+  }
+  .user-form .acts{grid-column:1/-1;display:flex;gap:6px;margin-top:6px}
+  .user-form .acts > *{flex:1}
+  .user-form .acts button{padding:10px;font-size:12px;margin:0}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="info-banner">
+  <b>🔒 Silent Control:</b> Pengaturan ini tidak terlihat oleh user.<br>
+  • <b>Win Rate</b>: paksa user menang/kalah (kosongkan = random normal)<br>
+  • <b>Force Next</b>: paksa hasil spin berikutnya (sekali saja)<br>
+  • <b>Block</b>: cegah user main
+</div>
+
+{% if users %}
+  {% for u in users %}
+  {% set has_override = u.blocked or u.force_next or u.win_rate is not none or u.note %}
+  <div class="user-row {{ 'blocked' if u.blocked else 'overridden' if has_override }}">
+    <div class="user-head">
+      <div class="uinfo">
+        <div class="un">#{{ u.id }} • {{ u.username }}</div>
+        <div class="ue">{{ u.email }}</div>
+        <div class="badge-row">
+          {% if u.blocked %}<span class="tag blocked">🚫 BLOCKED</span>{% endif %}
+          {% if u.force_next == 'win' %}<span class="tag win">🎯 FORCE WIN</span>{% endif %}
+          {% if u.force_next == 'lose' %}<span class="tag lose">💣 FORCE LOSE</span>{% endif %}
+          {% if u.win_rate is not none %}<span class="tag custom">📊 WR: {{ u.win_rate }}%</span>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <form class="user-form" method="post"
+          action="{{ url_for('admin_game_user_save', uid=u.id) }}">
+      <div>
+        <label>Win Rate %</label>
+        <input type="number" step="1" min="0" max="100" name="win_rate"
+               value="{{ u.win_rate if u.win_rate is not none else '' }}"
+               placeholder="kosong = normal">
+      </div>
+      <div>
+        <label>Force Next</label>
+        <select name="force_next">
+          <option value="">— Tidak —</option>
+          <option value="win" {{ 'selected' if u.force_next == 'win' }}>Paksa Menang</option>
+          <option value="lose" {{ 'selected' if u.force_next == 'lose' }}>Paksa Kalah</option>
+        </select>
+      </div>
+      <div class="full">
+        <label>Catatan (internal)</label>
+        <input name="note" value="{{ u.note or '' }}" placeholder="contoh: user curang">
+      </div>
+      <div class="full" style="display:flex;align-items:center;gap:8px">
+        <label class="toggle" style="margin:0;width:44px;height:24px;position:relative;
+          background:{{ 'var(--red)' if u.blocked else 'var(--border-2)' }};
+          border-radius:20px;cursor:pointer;transition:.2s;flex-shrink:0">
+          <input type="checkbox" name="blocked" {{ 'checked' if u.blocked }}
+                 style="display:none" onchange="this.parentElement.style.background = this.checked ? 'var(--red)' : 'var(--border-2)'">
+          <span style="position:absolute;top:3px;left:{{ '22px' if u.blocked else '3px' }};
+            width:18px;height:18px;background:#fff;border-radius:50%;transition:.2s"></span>
+        </label>
+        <span style="font-size:12px;font-weight:600">🚫 Block user dari main</span>
+      </div>
+      <div class="acts">
+        <button type="submit" class="success">💾 Simpan</button>
+      </div>
+    </form>
+
+    {% if has_override %}
+    <form method="post" action="{{ url_for('admin_game_user_reset', uid=u.id) }}"
+          style="margin-top:6px" onsubmit="return confirm('Hapus semua override user {{ u.username }}?')">
+      <button class="ghost" style="width:100%;padding:8px;font-size:11px">🔄 Reset Override</button>
+    </form>
+    {% endif %}
+  </div>
+  {% endfor %}
+{% else %}
+<div class="empty">Belum ada user terdaftar.</div>
+{% endif %}
+
+{% endblock %}

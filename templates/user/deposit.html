@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Deposit - AndGames{% endblock %}
+{% block header_title %}Deposit{% endblock %}
+{% block header_right %}
+  <div class="saldo-chip">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M14.5 9.5c-.5-.5-1.5-1-2.5-1s-2.5.5-2.5 1.5S10.5 11.5 12 11.5s2.5.5 2.5 1.5-1.5 1.5-2.5 1.5-2-.5-2.5-1"/>
+    </svg>
+    Rp {{ "{:,.0f}".format(u.saldo).replace(",",".") }}
+  </div>
+{% endblock %}
+
+{% block head %}
+<style>
+  .depo-hero{
+    background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(59,130,246,.1));
+    border:1px solid rgba(16,185,129,.3);
+    border-radius:var(--radius);padding:18px;margin-bottom:16px;
+    display:flex;align-items:center;gap:14px;
+  }
+  .depo-hero .icon{
+    width:48px;height:48px;border-radius:14px;flex-shrink:0;
+    background:linear-gradient(135deg,#10b981,#059669);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 20px rgba(16,185,129,.35);
+  }
+  .depo-hero .icon svg{width:24px;height:24px;stroke:#fff;stroke-width:2.2}
+  .depo-hero h3{margin:0 0 3px;font-size:15px;font-weight:700;
+    color:var(--text);text-transform:none;letter-spacing:0}
+  .depo-hero p{margin:0;font-size:12px;color:var(--muted);line-height:1.5}
+
+  .amount-input-wrap{
+    position:relative;margin:10px 0;
+  }
+  .amount-input-wrap .prefix{
+    position:absolute;left:16px;top:50%;transform:translateY(-50%);
+    font-size:16px;font-weight:700;color:var(--primary-2);
+    pointer-events:none;
+  }
+  .amount-input-wrap input{
+    padding-left:48px !important;font-size:18px;font-weight:700;
+    letter-spacing:.5px;
+  }
+  .quick-amount{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}
+  .quick-amount button{
+    flex:1;min-width:70px;width:auto;margin:0;padding:10px 6px;
+    background:var(--card-2);border:1px solid var(--border-2);
+    color:var(--text-2);font-size:12px;font-weight:700;
+    transition:.2s;
+  }
+  .quick-amount button:hover{
+    background:rgba(139,92,246,.15);border-color:var(--primary);
+    color:var(--primary-2);transform:translateY(-1px);
+    box-shadow:none;
+  }
+
+  .riwayat-item{
+    display:flex;align-items:center;gap:12px;
+    padding:14px;border-bottom:1px solid var(--border);
+    transition:.2s;
+  }
+  .riwayat-item:last-child{border-bottom:0}
+  .riwayat-item:hover{background:rgba(139,92,246,.04)}
+  .riwayat-item .ic{
+    width:38px;height:38px;border-radius:11px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .riwayat-item .ic.depo{
+    background:rgba(16,185,129,.15);color:#34d399;
+  }
+  .riwayat-item .ic svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.2}
+  .riwayat-item .info{flex:1;min-width:0}
+  .riwayat-item .jt{font-size:13px;font-weight:700;margin-bottom:3px}
+  .riwayat-item .waktu{font-size:11px;color:var(--muted)}
+  .riwayat-item .right{text-align:right;flex-shrink:0}
+  .riwayat-item .jl{font-size:14px;font-weight:800;
+    color:var(--primary-2);margin-bottom:4px}
+  .riwayat-item .action{
+    font-size:11px;font-weight:600;color:var(--primary);
+  }
+  .riwayat-list{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);overflow:hidden;margin-bottom:14px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="depo-hero">
+  <div class="icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  </div>
+  <div>
+    <h3>Top Up Saldo</h3>
+    <p>Scan QRIS DANA, minimal Rp {{ "{:,.0f}".format(min_deposit).replace(",",".") }}</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Nominal Deposit</h2>
+  <form method="post" action="{{ url_for('user_deposit') }}" id="formDepo">
+    <div class="amount-input-wrap">
+      <span class="prefix">Rp</span>
+      <input name="jumlah" id="jumlah" inputmode="numeric" placeholder="0" required>
+    </div>
+
+    <div class="quick-amount">
+      <button type="button" onclick="setAmt(10000)">10 rb</button>
+      <button type="button" onclick="setAmt(20000)">20 rb</button>
+      <button type="button" onclick="setAmt(50000)">50 rb</button>
+      <button type="button" onclick="setAmt(100000)">100 rb</button>
+    </div>
+
+    <button type="submit">
+      Lanjut ke QR
+      <svg style="width:14px;height:14px;display:inline;margin-left:4px;vertical-align:-2px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </button>
+  </form>
+</div>
+
+<h3>Riwayat Deposit</h3>
+{% if tx %}
+<div class="riwayat-list">
+  {% for t in tx %}
+  <div class="riwayat-item">
+    <div class="ic depo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </div>
+    <div class="info">
+      <div class="jt">Rp {{ "{:,.0f}".format(t.jumlah).replace(",",".") }}</div>
+      <div class="waktu">{{ t.created_at }}</div>
+    </div>
+    <div class="right">
+      <div class="jl">
+        <span class="badge {{ t.status }}">{{ t.status }}</span>
+      </div>
+      {% if t.status == 'pending' %}
+      <a href="{{ url_for('user_deposit_qr', tid=t.id) }}" class="action">
+        {{ 'Lanjutkan →' if not t.bukti else 'Detail →' }}
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">Belum ada deposit.<br>Yuk top up saldo pertamamu! 🚀</div>
+{% endif %}
+
+<script>
+function setAmt(n){
+  document.getElementById('jumlah').value = n;
+}
+// Format angka otomatis
+document.getElementById('jumlah').addEventListener('input', e => {
+  let v = e.target.value.replace(/\D/g, '');
+  e.target.value = v;
+});
+</script>
+
+{% endblock %}
+
+{% block bottomnav %}{% include "partials/bottomnav.html" %}{% endblock %}

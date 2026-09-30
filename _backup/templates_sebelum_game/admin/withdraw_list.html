@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Kelola Withdraw - AndGames{% endblock %}
+{% block header_title %}Kelola Withdraw{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('admin') }}" style="color:var(--primary-2);font-size:12px;font-weight:700;text-decoration:none">← Dashboard</a>
+{% endblock %}
+
+{% block head %}
+<style>
+  .tx-card{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:14px;margin-bottom:10px;
+    transition:.2s;
+  }
+  .tx-card.pending{
+    border-color:rgba(245,158,11,.4);
+    background:linear-gradient(135deg,rgba(245,158,11,.06),var(--card));
+  }
+  .tx-card:hover{border-color:var(--border-2)}
+  .tx-card .top{display:flex;justify-content:space-between;
+    align-items:flex-start;gap:10px;margin-bottom:10px}
+  .tx-card .uinfo{flex:1;min-width:0}
+  .tx-card .un{font-size:13px;font-weight:700;margin-bottom:2px}
+  .tx-card .ut{font-size:10px;color:var(--muted)}
+  .tx-card .amount{
+    font-size:16px;font-weight:800;color:#fbbf24;
+    white-space:nowrap;
+  }
+  .tx-card .meta{font-size:11px;color:var(--muted);line-height:1.8;margin-bottom:10px}
+  .tx-card .meta b{color:var(--text-2);font-weight:600}
+  .tx-card .acts{display:flex;gap:6px}
+  .tx-card .acts > *{flex:1}
+  .tx-card .acts button{padding:10px;font-size:12px;margin:0}
+
+  .filter-tabs{display:flex;gap:6px;background:var(--card);
+    border:1px solid var(--border);border-radius:12px;
+    padding:4px;margin-bottom:14px}
+  .filter-tabs a{flex:1;text-align:center;padding:9px;
+    border-radius:9px;font-size:12px;font-weight:700;
+    color:var(--muted);text-decoration:none;transition:.2s}
+  .filter-tabs a.active{background:var(--grad-1);color:#fff}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="filter-tabs">
+  <a href="{{ url_for('admin_deposit') }}">Deposit</a>
+  <a href="{{ url_for('admin_withdraw') }}" class="active">Withdraw</a>
+</div>
+
+{% if rows %}
+  {% for t in rows %}
+  <div class="tx-card {{ 'pending' if t.status=='pending' }}">
+    <div class="top">
+      <div class="uinfo">
+        <div class="un">👤 {{ t.username }}</div>
+        <div class="ut">#{{ t.id }} • {{ t.created_at }}</div>
+      </div>
+      <div class="amount">−Rp {{ "{:,.0f}".format(t.jumlah).replace(",",".") }}</div>
+    </div>
+
+    <div class="meta">
+      <div><b>Status:</b> <span class="badge {{ t.status }}">{{ t.status }}</span></div>
+      <div><b>Tujuan:</b> {{ t.provider or '-' }} — {{ t.norek or '-' }}</div>
+      {% if t.admin_note %}
+      <div><b>Catatan:</b> {{ t.admin_note }}</div>
+      {% endif %}
+    </div>
+
+    {% if t.status == 'pending' %}
+    <div class="acts">
+      <form method="post" action="{{ url_for('admin_withdraw_action', tid=t.id, aksi='approve') }}">
+        <button class="success">
+          <svg style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Approve
+        </button>
+      </form>
+      <form method="post" action="{{ url_for('admin_withdraw_action', tid=t.id, aksi='reject') }}"
+            onsubmit="return confirm('Tolak WD #{{ t.id }}?\nSaldo akan dikembalikan ke user.')">
+        <button class="danger">
+          <svg style="width:14px;height:14px;display:inline;vertical-align:-2px;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+          Reject
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+{% else %}
+<div class="empty">Belum ada transaksi withdraw.</div>
+{% endif %}
+
+{% endblock %}

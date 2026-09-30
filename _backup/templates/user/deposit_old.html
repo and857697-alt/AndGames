@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Deposit - AndGames{% endblock %}
+{% block header_title %}Deposit{% endblock %}
+{% block header_right %}
+  <div class="saldo">Saldo: <b>Rp {{ "{:,.0f}".format(u.saldo).replace(",",".") }}</b></div>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h2>Ajukan Deposit</h2>
+  <p class="muted">
+    Transfer ke <b>{{ u.provider }}</b> — <b>{{ u.norek }}</b><br>
+    Minimal Rp {{ "{:,.0f}".format(min_deposit).replace(",",".") }}
+  </p>
+  <form method="post">
+    <input name="jumlah" inputmode="numeric" placeholder="Nominal (contoh: 50000)" required>
+    <button>Kirim Permintaan</button>
+  </form>
+</div>
+
+<h3>Riwayat Deposit</h3>
+<div class="wrap">
+  {% if tx %}
+  <table>
+    <tr><th>Waktu</th><th>Jumlah</th><th>Status</th><th>Catatan</th></tr>
+    {% for t in tx %}
+    <tr>
+      <td class="muted">{{ t.created_at }}</td>
+      <td>Rp {{ "{:,.0f}".format(t.jumlah).replace(",",".") }}</td>
+      <td><span class="badge {{ t.status }}">{{ t.status }}</span></td>
+      <td class="muted">{{ t.admin_note or '-' }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="empty">Belum ada deposit.</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block bottomnav %}{% include "partials/bottomnav.html" %}{% endblock %}

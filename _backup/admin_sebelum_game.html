@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}Admin - AndGames{% endblock %}
+{% block header_title %}Dashboard Admin{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('logout') }}" style="color:#f87171;font-size:12px;font-weight:700;text-decoration:none">Logout</a>
+{% endblock %}
+
+{% block head %}
+<style>
+  .admin-hero{
+    background:linear-gradient(135deg,rgba(139,92,246,.15),rgba(59,130,246,.1));
+    border:1px solid rgba(139,92,246,.3);
+    border-radius:var(--radius);padding:18px;margin-bottom:16px;
+    display:flex;align-items:center;gap:14px;
+  }
+  .admin-hero .icon{
+    width:52px;height:52px;border-radius:14px;flex-shrink:0;
+    background:var(--grad-1);display:flex;align-items:center;
+    justify-content:center;font-size:24px;
+    box-shadow:0 8px 20px rgba(139,92,246,.4);
+  }
+  .admin-hero h3{margin:0 0 3px;font-size:15px;font-weight:700;
+    color:var(--text);text-transform:none;letter-spacing:0}
+  .admin-hero p{margin:0;font-size:12px;color:var(--muted)}
+
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .stat-card{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:14px;
+    position:relative;overflow:hidden;transition:.2s;
+  }
+  .stat-card:hover{transform:translateY(-2px);border-color:var(--border-2)}
+  .stat-card::before{
+    content:"";position:absolute;top:-30%;right:-20%;
+    width:100px;height:100px;border-radius:50%;
+    opacity:.15;pointer-events:none;
+  }
+  .stat-card.blue::before{background:var(--blue)}
+  .stat-card.amber::before{background:var(--amber)}
+  .stat-card.green::before{background:var(--green)}
+  .stat-card.purple::before{background:var(--primary)}
+  .stat-card .sc-lbl{font-size:10px;color:var(--muted);font-weight:700;
+    text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+  .stat-card .sc-val{font-size:19px;font-weight:800;letter-spacing:-.3px;
+    line-height:1}
+  .stat-card.blue .sc-val{color:#60a5fa}
+  .stat-card.amber .sc-val{color:#fbbf24}
+  .stat-card.green .sc-val{color:#34d399}
+  .stat-card.purple .sc-val{
+    background:var(--grad-1);-webkit-background-clip:text;
+    background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .stat-card .sc-sub{font-size:10px;color:var(--muted);margin-top:4px}
+
+  .menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .menu-card{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:18px 12px;text-decoration:none;
+    color:var(--text);transition:.2s;position:relative;overflow:hidden;
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+  }
+  .menu-card:hover{
+    border-color:var(--primary);transform:translateY(-2px);
+    box-shadow:0 8px 24px rgba(139,92,246,.22);
+  }
+  .menu-card .mico{
+    width:42px;height:42px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .menu-card .mico.depo{
+    background:linear-gradient(135deg,rgba(16,185,129,.25),rgba(52,211,153,.1));
+    color:#34d399;
+  }
+  .menu-card .mico.wd{
+    background:linear-gradient(135deg,rgba(251,191,36,.25),rgba(245,158,11,.1));
+    color:#fbbf24;
+  }
+  .menu-card .mico svg{width:20px;height:20px;stroke:currentColor;stroke-width:2.2}
+  .menu-card .mt{font-size:13px;font-weight:700}
+  .menu-card .ms{font-size:10px;color:var(--muted)}
+  .menu-card .badge-pend{
+    position:absolute;top:10px;right:10px;
+    background:#ef4444;color:#fff;
+    font-size:10px;font-weight:800;padding:3px 8px;
+    border-radius:20px;box-shadow:0 4px 12px rgba(239,68,68,.4);
+    animation:pulseGlow 2s infinite;
+  }
+
+  .user-card{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:14px;margin-bottom:10px;
+    transition:.2s;
+  }
+  .user-card:hover{border-color:var(--border-2)}
+  .user-card .top{display:flex;justify-content:space-between;
+    align-items:flex-start;gap:10px;margin-bottom:10px}
+  .user-card .ava{
+    width:40px;height:40px;border-radius:12px;flex-shrink:0;
+    background:var(--grad-1);display:flex;align-items:center;
+    justify-content:center;font-weight:800;color:#fff;font-size:16px;
+  }
+  .user-card .uinfo{flex:1;min-width:0}
+  .user-card .un{font-size:14px;font-weight:700;margin-bottom:2px}
+  .user-card .ue{font-size:11px;color:var(--muted);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .user-card .us{
+    font-size:13px;font-weight:800;color:#34d399;white-space:nowrap;
+  }
+  .user-card .meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .user-card .meta .tag{
+    font-size:10px;padding:3px 8px;border-radius:20px;
+    background:var(--card-2);border:1px solid var(--border);
+    color:var(--muted);font-weight:600;
+  }
+  .user-card .acts{display:flex;gap:6px}
+  .user-card .acts > *{flex:1}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="admin-hero">
+  <div class="icon">🛡️</div>
+  <div>
+    <h3>Panel Administrator</h3>
+    <p>Kelola user & approve transaksi</p>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card blue">
+    <div class="sc-lbl">Total User</div>
+    <div class="sc-val">{{ stats.total_user }}</div>
+    <div class="sc-sub">terdaftar</div>
+  </div>
+  <div class="stat-card purple">
+    <div class="sc-lbl">Total Saldo</div>
+    <div class="sc-val">Rp {{ "{:,.0f}".format(stats.total_saldo).replace(",",".") }}</div>
+    <div class="sc-sub">semua user</div>
+  </div>
+  <div class="stat-card green">
+    <div class="sc-lbl">Pending Depo</div>
+    <div class="sc-val">{{ stats.pending_depo }}</div>
+    <div class="sc-sub">perlu approve</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="sc-lbl">Pending WD</div>
+    <div class="sc-val">{{ stats.pending_wd }}</div>
+    <div class="sc-sub">perlu approve</div>
+  </div>
+</div>
+
+<h3>Kelola Transaksi</h3>
+<div class="menu-grid">
+  <a href="{{ url_for('admin_deposit') }}" class="menu-card">
+    {% if stats.pending_depo %}
+    <span class="badge-pend">{{ stats.pending_depo }}</span>
+    {% endif %}
+    <div class="mico depo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </div>
+    <div class="mt">Deposit</div>
+    <div class="ms">{{ stats.pending_depo }} pending</div>
+  </a>
+  <a href="{{ url_for('admin_withdraw') }}" class="menu-card">
+    {% if stats.pending_wd %}
+    <span class="badge-pend">{{ stats.pending_wd }}</span>
+    {% endif %}
+    <div class="mico wd">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 17l9.2-9.2M17 17V7H7"/>
+      </svg>
+    </div>
+    <div class="mt">Withdraw</div>
+    <div class="ms">{{ stats.pending_wd }} pending</div>
+  </a>
+</div>
+
+<h3>Daftar User ({{ users|length }})</h3>
+{% for x in users %}
+<div class="user-card">
+  <div class="top">
+    <div class="ava">{{ x.username[0]|upper }}</div>
+    <div class="uinfo">
+      <div class="un">{{ x.username }}</div>
+      <div class="ue">{{ x.email }}</div>
+    </div>
+    <div class="us">Rp {{ "{:,.0f}".format(x.saldo or 0).replace(",",".") }}</div>
+  </div>
+  <div class="meta">
+    <span class="tag">📱 {{ x.no_hp }}</span>
+    <span class="tag">{{ '💳' if x.metode=='bank' else '📲' }} {{ x.provider or '-' }}</span>
+    <span class="tag">ID #{{ x.id }}</span>
+  </div>
+  <div class="acts">
+    <a href="{{ url_for('edit_user', uid=x.id) }}">
+      <button class="ghost small" style="width:100%;padding:8px;font-size:12px">✏️ Edit</button>
+    </a>
+    <button class="danger small" style="padding:8px;font-size:12px"
+            onclick="confirmModal('Hapus user {{ x.username }}?', () => document.getElementById('del-{{ x.id }}').submit())">
+      🗑️ Hapus
+    </button>
+    <form id="del-{{ x.id }}" method="post" action="{{ url_for('delete_user', uid=x.id) }}" style="display:none"></form>
+  </div>
+</div>
+{% else %}
+<div class="empty">Belum ada user terdaftar.</div>
+{% endfor %}
+
+{% endblock %}

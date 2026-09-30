@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Login - AndGames{% endblock %}
+{% block header_title %}AndGames{% endblock %}
+
+{% block content %}
+<div style="text-align:center;padding:20px 0">
+  <div style="font-size:44px">🎮</div>
+  <h2 style="margin:6px 0">AndGames</h2>
+  <p class="muted">Masuk untuk main & kelola saldo</p>
+</div>
+
+<div class="card">
+  <h2>Login</h2>
+  <form method="post">
+    <input name="username" placeholder="Username" required autofocus>
+    <input name="password" type="password" placeholder="Password" required>
+    <button>Login</button>
+  </form>
+  <p class="muted" style="text-align:center;margin-top:12px">
+    Belum punya akun? <a href="{{ url_for('register') }}">Daftar</a>
+  </p>
+</div>
+{% endblock %}

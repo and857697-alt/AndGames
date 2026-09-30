@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Daftar - AndGames{% endblock %}
+{% block header_title %}Daftar Akun{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h2>Buat Akun Baru</h2>
+  <form method="post">
+    <input name="username" placeholder="Username" required>
+    <input name="password" type="password" placeholder="Password" required>
+    <input name="email" type="email" placeholder="Email" required>
+    <input name="no_hp" placeholder="No HP" required>
+
+    <select name="metode" id="metode" required>
+      <option value="">-- Pilih metode --</option>
+      <option value="ewallet">E-Wallet</option>
+      <option value="bank">Bank</option>
+    </select>
+
+    <select name="provider" id="provider" required>
+      <option value="">-- Pilih metode dulu --</option>
+    </select>
+
+    <input name="norek" placeholder="No Rekening / No E-Wallet" required>
+    <button>Daftar</button>
+  </form>
+  <p class="muted" style="text-align:center;margin-top:12px">
+    Sudah punya akun? <a href="{{ url_for('login') }}">Login</a>
+  </p>
+</div>
+
+<script>
+const P = {{ providers|tojson }};
+const m = document.getElementById("metode");
+const p = document.getElementById("provider");
+
+m.addEventListener("change", () => {
+  const label = m.value === "bank" ? "bank" : m.value === "ewallet" ? "e-wallet" : "metode dulu";
+  p.innerHTML = '<option value="">-- Pilih ' + label + ' --</option>';
+  (P[m.value] || []).forEach(x => {
+    const o = document.createElement("option");
+    o.value = o.textContent = x;
+    p.appendChild(o);
+  });
+});
+</script>
+{% endblock %}

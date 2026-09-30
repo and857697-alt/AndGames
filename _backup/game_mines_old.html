@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+{% block title %}Mines - AndGames{% endblock %}
+{% block header_title %}🎯 Mines{% endblock %}
+{% block header_right %}
+  <div class="saldo-chip">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M14.5 9.5c-.5-.5-1.5-1-2.5-1s-2.5.5-2.5 1.5S10.5 11.5 12 11.5s2.5.5 2.5 1.5-1.5 1.5-2.5 1.5-2-.5-2.5-1"/>
+    </svg>
+    Rp {{ "{:,.0f}".format(u.saldo).replace(",",".") }}
+  </div>
+{% endblock %}
+
+{% block head %}
+<style>
+  .bet-panel{
+    background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(59,130,246,.08));
+    border:1px solid rgba(139,92,246,.3);
+    border-radius:var(--radius);padding:16px;margin-bottom:14px;
+  }
+  .row-label{
+    font-size:11px;font-weight:700;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;
+  }
+  .amount-wrap{position:relative;margin-bottom:12px}
+  .amount-wrap .prefix{
+    position:absolute;left:14px;top:50%;transform:translateY(-50%);
+    font-size:16px;font-weight:700;color:var(--primary-2);
+    pointer-events:none;
+  }
+  .amount-wrap input{
+    padding-left:44px !important;font-size:17px;font-weight:700;margin:0;
+  }
+  .quick-amount{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+  .quick-amount button{
+    flex:1;min-width:60px;width:auto;margin:0;padding:9px 6px;
+    background:var(--card-2);border:1px solid var(--border-2);
+    color:var(--text-2);font-size:12px;font-weight:700;
+  }
+  .quick-amount button:hover{
+    background:rgba(139,92,246,.15);border-color:var(--primary);
+    color:var(--primary-2);box-shadow:none;transform:translateY(-1px);
+  }
+
+  .bomb-options{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+  .bomb-opt{
+    background:var(--card-2);border:1px solid var(--border-2);
+    border-radius:12px;padding:12px 8px;text-align:center;
+    cursor:pointer;transition:.2s;
+  }
+  .bomb-opt:hover{border-color:var(--primary);transform:translateY(-1px)}
+  .bomb-opt.active{
+    background:var(--grad-1);border-color:transparent;
+    box-shadow:0 6px 18px rgba(139,92,246,.35);
+  }
+  .bomb-opt .bnum{font-size:20px;margin-bottom:2px}
+  .bomb-opt .btxt{font-size:10px;color:var(--muted);font-weight:700;
+    text-transform:uppercase;letter-spacing:.5px}
+  .bomb-opt.active .btxt{color:rgba(255,255,255,.9)}
+
+  .status-panel{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:14px;margin-bottom:14px;
+  }
+  .status-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:8px 0;border-bottom:1px solid var(--border);
+  }
+  .status-row:last-child{border-bottom:0}
+  .status-row .k{font-size:12px;color:var(--muted);font-weight:600}
+  .status-row .v{font-size:15px;font-weight:800}
+  .status-row .v.green{color:#34d399}
+  .status-row .v.gold{color:#fbbf24}
+
+  .grid{
+    display:grid;grid-template-columns:repeat(5,1fr);gap:8px;
+    margin:16px 0;
+  }
+  .tile{
+    aspect-ratio:1/1;border-radius:12px;
+    background:linear-gradient(135deg,var(--card-2),var(--card));
+    border:1px solid var(--border-2);
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;cursor:pointer;transition:.2s;
+    user-select:none;position:relative;
+  }
+  .tile::before{content:"❓";font-size:20px;opacity:.6}
+  .tile:hover:not(.opened):not(.disabled){
+    border-color:var(--primary);transform:translateY(-2px);
+    box-shadow:0 6px 18px rgba(139,92,246,.3);
+  }
+  .tile.opened{cursor:default;transform:none !important}
+  .tile.opened::before{display:none}
+  .tile.opened.safe{
+    background:linear-gradient(135deg,rgba(16,185,129,.25),rgba(52,211,153,.1));
+    border-color:#34d399;
+  }
+  .tile.opened.safe::after{content:"💎";font-size:22px;animation:popIn .35s ease}
+  .tile.opened.bomb{
+    background:linear-gradient(135deg,rgba(239,68,68,.35),rgba(220,38,38,.2));
+    border-color:#ef4444;
+  }
+  .tile.opened.bomb::after{content:"💣";font-size:22px;animation:popIn .35s ease}
+  .tile.disabled{cursor:not-allowed;opacity:.5}
+  @keyframes popIn{
+    0%{transform:scale(0) rotate(-180deg);opacity:0}
+    60%{transform:scale(1.2)}
+    100%{transform:scale(1);opacity:1}
+  }
+
+  .btn-main{
+    background:linear-gradient(135deg,#10b981,#059669) !important;
+    font-size:15px !important;padding:14px !important;
+  }
+  .btn-main:hover{box-shadow:0 8px 24px rgba(16,185,129,.45) !important}
+
+  .history-mini{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);overflow:hidden;margin-bottom:14px;
+  }
+  .hitem{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;
+  }
+  .hitem:last-child{border-bottom:0}
+  .hitem .hl{display:flex;gap:8px;align-items:center}
+  .hitem .hf{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+  .hitem .hf.win{background:rgba(16,185,129,.15);color:#34d399}
+  .hitem .hf.lose{background:rgba(239,68,68,.15);color:#f87171}
+  .hitem .hp{font-weight:800}
+  .hitem .hp.win{color:#34d399}
+  .hitem .hp.lose{color:#f87171}
+
+  .modal-result{
+    display:none;position:fixed;inset:0;z-index:9999;
+    align-items:center;justify-content:center;padding:16px;
+    background:rgba(0,0,0,.85);backdrop-filter:blur(8px);
+  }
+  .modal-result.show{display:flex}
+  .modal-result .box{
+    background:var(--card);border:1px solid var(--border-2);
+    border-radius:20px;padding:28px 22px;text-align:center;
+    max-width:340px;width:100%;animation:popIn .4s ease;
+  }
+  .modal-result .box .emoji{font-size:64px;margin-bottom:12px;display:block}
+  .modal-result .box h2{margin:0 0 8px;font-size:22px}
+  .modal-result .box p{margin:0 0 20px;color:var(--muted);font-size:14px}
+  .modal-result .box .big-amt{
+    font-size:26px;font-weight:800;
+    background:var(--grad-1);-webkit-background-clip:text;
+    background-clip:text;-webkit-text-fill-color:transparent;
+    margin:8px 0 20px;
+  }
+  .modal-result .box.lose .big-amt{
+    color:#f87171;background:none;-webkit-text-fill-color:#f87171;
+  }
+  .admin-note{
+    background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);
+    border-radius:10px;padding:10px 12px;font-size:12px;color:#fbbf24;
+    margin-bottom:12px;line-height:1.5;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if ov and ov.blocked %}
+<div class="admin-note">⚠ Akun kamu sementara tidak bisa bermain.</div>
+{% elif today_win >= max_win %}
+<div class="admin-note">⚠ Batas menang harian tercapai (Rp {{ "{:,.0f}".format(today_win).replace(",",".") }}). Coba lagi besok.</div>
+{% endif %}
+
+{% if not active %}
+  <div class="bet-panel">
+    <div class="row-label">💰 Nominal Bet</div>
+    <div class="amount-wrap">
+      <span class="prefix">Rp</span>
+      <input id="betInput" inputmode="numeric" placeholder="0" value="{{ int(cfg.min_bet) }}">
+    </div>
+    <div class="quick-amount">
+      <button type="button" onclick="setBet(200)">200</button>
+      <button type="button" onclick="setBet(1000)">1 rb</button>
+      <button type="button" onclick="setBet(5000)">5 rb</button>
+      <button type="button" onclick="setBet(10000)">10 rb</button>
+    </div>
+
+    <div class="row-label" style="margin-top:12px">💣 Jumlah Bom</div>
+    <div class="bomb-options" id="bombOptions">
+      {% for b in bombs %}
+      <div class="bomb-opt {{ 'active' if b==3 }}" data-bombs="{{ b }}">
+        <div class="bnum">{{ b }}</div>
+        <div class="btxt">bom</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <button class="btn-main" onclick="startGame()">🎮 Mulai Main</button>
+  </div>
+
+{% else %}
+  <div class="status-panel">
+    <div class="status-row">
+      <span class="k">Bet</span>
+      <span class="v">Rp {{ "{:,.0f}".format(active.bet).replace(",",".") }}</span>
+    </div>
+    <div class="status-row">
+      <span class="k">Jumlah Bom</span>
+      <span class="v gold">💣 {{ active.bombs }}</span>
+    </div>
+    <div class="status-row">
+      <span class="k">Kotak Dibuka</span>
+      <span class="v" id="openedCount">{{ active.clicked }}</span>
+    </div>
+    <div class="status-row">
+      <span class="k">Multiplier</span>
+      <span class="v green" id="multiplier">×{{ "%.2f"|format(active.multiplier) if active.multiplier else "0.00" }}</span>
+    </div>
+    <div class="status-row">
+      <span class="k">Potensi Untung</span>
+      <span class="v green" id="payout">
+        Rp {{ "{:,.0f}".format(active.payout).replace(",",".") if active.payout else "0" }}
+      </span>
+    </div>
+  </div>
+
+  <div class="grid" id="grid">
+    {% for i in range(25) %}
+    <div class="tile" data-pos="{{ i }}"></div>
+    {% endfor %}
+  </div>
+
+  <button class="btn-main" id="cashoutBtn" onclick="cashOut()" {{ 'disabled' if active.clicked < 1 }}>
+    💰 Cash Out (<span id="cashoutAmt">Rp 0</span>)
+  </button>
+{% endif %}
+
+<h3>Riwayat Main</h3>
+{% if history %}
+<div class="history-mini">
+  {% for h in history %}
+  <div class="hitem">
+    <div class="hl">
+      <span class="hf {{ 'win' if h.profit >= 0 else 'lose' }}">
+        {{ '✅' if h.profit >= 0 else '💣' }} {{ h.bombs }}b
+      </span>
+      <span class="muted">{{ h.created_at }}</span>
+    </div>
+    <div class="hp {{ 'win' if h.profit >= 0 else 'lose' }}">
+      {{ '+' if h.profit >= 0 else '' }}Rp {{ "{:,.0f}".format(h.profit).replace(",",".") }}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">Belum ada riwayat main.</div>
+{% endif %}
+
+<div class="modal-result" id="modalResult">
+  <div class="box" id="modalBox">
+    <span class="emoji" id="modalEmoji">🎉</span>
+    <h2 id="modalTitle">Menang!</h2>
+    <p id="modalText">Selamat!</p>
+    <div class="big-amt" id="modalAmt">Rp 0</div>
+    <button onclick="closeModal()">Lanjut</button>
+  </div>
+</div>
+
+<script>
+  let selectedBombs = 3;
+  const cfg = {
+    min_bet: {{ cfg.min_bet }},
+    max_bet: {{ cfg.max_bet }},
+  };
+
+  document.querySelectorAll('.bomb-opt').forEach(el => {
+    el.onclick = () => {
+      document.querySelectorAll('.bomb-opt').forEach(x => x.classList.remove('active'));
+      el.classList.add('active');
+      selectedBombs = parseInt(el.dataset.bombs);
+    };
+  });
+
+  function setBet(n){
+    const inp = document.getElementById('betInput');
+    if (!inp) return;
+    inp.value = Math.min(n, {{ int(u.saldo) }});
+  }
+
+  function startGame(){
+    const inp = document.getElementById('betInput');
+    if (!inp) return;
+    const bet = parseInt(inp.value.replace(/\D/g,'')) || 0;
+    if (bet < cfg.min_bet) { alert('Minimal bet Rp ' + cfg.min_bet); return; }
+    if (bet > cfg.max_bet) { alert('Maksimal bet Rp ' + cfg.max_bet); return; }
+
+    const f = document.createElement('form');
+    f.method = 'POST';
+    f.action = '{{ url_for("user_game_start") }}';
+    f.innerHTML = '<input name="bet" value="' + bet + '"><input name="bombs" value="' + selectedBombs + '">';
+    document.body.appendChild(f);
+    f.submit();
+  }
+
+  function formatNum(n){
+    return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  {% if active %}
+  document.querySelectorAll('.tile').forEach(t => {
+    t.onclick = () => clickTile(parseInt(t.dataset.pos), t);
+  });
+
+  function clickTile(pos, el){
+    if (el.classList.contains('opened') || el.classList.contains('disabled')) return;
+    el.classList.add('disabled');
+
+    fetch('{{ url_for("user_game_click") }}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({pos: pos})
+    })
+    .then(r => r.json())
+    .then(d => {
+      if (!d.ok) { alert(d.err || 'Error'); el.classList.remove('disabled'); return; }
+      if (d.bomb) {
+        el.classList.remove('disabled');
+        el.classList.add('opened', 'bomb');
+        document.querySelectorAll('.tile:not(.opened)').forEach(x => x.classList.add('disabled'));
+        setTimeout(() => showResult(false, 0, {{ active.bet }}), 800);
+      } else {
+        el.classList.remove('disabled');
+        el.classList.add('opened', 'safe');
+        document.getElementById('openedCount').textContent = d.clicked;
+        document.getElementById('multiplier').textContent = '×' + d.multiplier.toFixed(2);
+        document.getElementById('payout').textContent = 'Rp ' + formatNum(d.payout);
+        const co = document.getElementById('cashoutAmt');
+        if (co) co.textContent = 'Rp ' + formatNum(d.payout);
+        document.getElementById('cashoutBtn').disabled = false;
+      }
+    })
+    .catch(() => { el.classList.remove('disabled'); alert('Koneksi error'); });
+  }
+
+  function cashOut(){
+    if (!confirm('Yakin cash out sekarang?')) return;
+    fetch('{{ url_for("user_game_cashout") }}', {method: 'POST'})
+      .then(r => r.json())
+      .then(d => {
+        if (!d.ok) { alert(d.err || 'Error'); return; }
+        showResult(d.profit >= 0, d.payout, d.profit);
+      });
+  }
+  {% endif %}
+
+  function showResult(win, payout, profit){
+    const m = document.getElementById('modalResult');
+    const box = document.getElementById('modalBox');
+    document.getElementById('modalEmoji').textContent = win ? '🎉' : '💣';
+    document.getElementById('modalTitle').textContent = win ? 'Cash Out!' : 'Kena Bom!';
+    document.getElementById('modalText').textContent = win
+      ? 'Saldo kamu bertambah.' : 'Bet kamu hangus. Coba lagi!';
+    document.getElementById('modalAmt').textContent =
+      (win ? '+Rp ' : '-Rp ') + formatNum(win ? payout : Math.abs(profit));
+    box.classList.toggle('lose', !win);
+    m.classList.add('show');
+  }
+
+  function closeModal(){
+    document.getElementById('modalResult').classList.remove('show');
+    location.href = '{{ url_for("user_game") }}';
+  }
+
+  const bi = document.getElementById('betInput');
+  if (bi) bi.addEventListener('input', e => {
+    e.target.value = e.target.value.replace(/\D/g,'');
+  });
+</script>
+
+{% endblock %}
+
+{% block bottomnav %}{% include "partials/bottomnav.html" %}{% endblock %}

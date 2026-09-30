@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Kelola Promo - Admin{% endblock %}
+{% block header_title %}🎟️ Kelola Promo{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('admin') }}" style="color:var(--primary-2);font-size:12px;font-weight:700;text-decoration:none">← Dashboard</a>
+{% endblock %}
+
+{% block head %}
+<style>
+  .form-card{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:16px;margin-bottom:16px;
+  }
+  .form-card h3{
+    margin:0 0 14px;font-size:13px;text-transform:uppercase;
+    letter-spacing:.8px;color:var(--text-2);
+  }
+  .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .fgrid .full{grid-column:1/-1}
+  .fgrid label{
+    display:block;font-size:10px;color:var(--muted);font-weight:700;
+    text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;
+  }
+  .fgrid input{margin:0;padding:10px 12px;font-size:13px}
+
+  .code-list{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);overflow:hidden;
+  }
+  .code-item{
+    padding:14px;border-bottom:1px solid var(--border);
+    display:flex;justify-content:space-between;align-items:flex-start;
+    gap:12px;font-size:13px;
+  }
+  .code-item:last-child{border-bottom:0}
+  .code-item.inactive{opacity:.5}
+  .code-item .left{flex:1;min-width:0}
+  .code-item .cd{
+    font-size:16px;font-weight:800;letter-spacing:2px;
+    color:var(--primary-2);margin-bottom:4px;
+    font-family:'SF Mono',Consolas,monospace;
+  }
+  .code-item .info{
+    font-size:11px;color:var(--muted);line-height:1.6;
+  }
+  .code-item .info b{color:var(--text-2);font-weight:700}
+  .code-item .right{
+    text-align:right;flex-shrink:0;
+    display:flex;flex-direction:column;gap:6px;align-items:flex-end;
+  }
+  .code-item .nom{
+    font-size:15px;font-weight:800;color:#34d399;
+  }
+  .code-item .acts{display:flex;gap:4px}
+  .code-item .acts button{
+    padding:4px 10px;font-size:10px;margin:0;width:auto;
+  }
+  .code-item .badge-act{
+    display:inline-block;padding:2px 8px;border-radius:12px;
+    font-size:9px;font-weight:800;letter-spacing:.5px;
+  }
+  .code-item .badge-act.on{background:rgba(16,185,129,.15);color:#34d399}
+  .code-item .badge-act.off{background:rgba(136,146,168,.15);color:var(--muted)}
+  .code-item .badge-act.exp{background:rgba(239,68,68,.15);color:#f87171}
+  .code-item .badge-act.full{background:rgba(245,158,11,.15);color:#fbbf24}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="form-card">
+  <h3>➕ Buat Kode Baru</h3>
+  <form method="post" action="{{ url_for('admin_promo_create') }}">
+    <div class="fgrid">
+      <div class="full">
+        <label>Kode (huruf/angka, tanpa spasi)</label>
+        <input name="code" placeholder="ANDGAMES2025" maxlength="20"
+               style="text-transform:uppercase;font-weight:800;letter-spacing:1px;text-align:center"
+               required>
+      </div>
+      <div>
+        <label>Nominal (Rp)</label>
+        <input name="nominal" type="number" min="100" step="100" placeholder="5000" required>
+      </div>
+      <div>
+        <label>Max Pakai Total (0 = unlimited)</label>
+        <input name="max_uses" type="number" min="0" value="0">
+      </div>
+      <div>
+        <label>Max per User</label>
+        <input name="max_per_user" type="number" min="1" value="1">
+      </div>
+      <div>
+        <label>Expired (opsional)</label>
+        <input name="expired_at" type="date">
+      </div>
+      <div class="full">
+        <button type="submit" class="success" style="width:100%">
+          🎟️ Buat Kode Promo
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<h3>Daftar Kode ({{ codes|length }})</h3>
+
+{% if codes %}
+<div class="code-list">
+  {% for c in codes %}
+  {% set is_expired = c.expired_at and c.expired_at < now_str %}
+  {% set is_full = c.max_uses > 0 and c.used_count >= c.max_uses %}
+  <div class="code-item {{ 'inactive' if not c.active or is_expired }}">
+    <div class="left">
+      <div class="cd">{{ c.code }}</div>
+      <div class="info">
+        Dipakai: <b>{{ c.used_count }}x</b>
+        {% if c.max_uses > 0 %} / max <b>{{ c.max_uses }}x</b>{% endif %}
+        • <b>{{ c.max_per_user }}x</b> per user<br>
+        {% if c.expired_at %}Exp: <b>{{ c.expired_at }}</b><br>{% endif %}
+        Dibuat: {{ c.created_at }}
+      </div>
+      <div style="margin-top:6px">
+        {% if is_expired %}
+          <span class="badge-act exp">EXPIRED</span>
+        {% elif not c.active %}
+          <span class="badge-act off">OFF</span>
+        {% elif is_full %}
+          <span class="badge-act full">HABIS</span>
+        {% else %}
+          <span class="badge-act on">AKTIF</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="right">
+      <div class="nom">Rp {{ "{:,.0f}".format(c.nominal).replace(",",".") }}</div>
+      <div class="acts">
+        <form method="post" action="{{ url_for('admin_promo_toggle', cid=c.id) }}" style="display:inline">
+          <button class="ghost" title="Aktif/Nonaktif">{{ '🔒' if c.active else '🔓' }}</button>
+        </form>
+        <form method="post" action="{{ url_for('admin_promo_delete', cid=c.id) }}"
+              onsubmit="return confirm('Hapus kode {{ c.code }}?')" style="display:inline">
+          <button class="danger" title="Hapus">🗑️</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">Belum ada kode promo.</div>
+{% endif %}
+
+<script>
+// biar template bisa akses now_str
+</script>
+
+{% endblock %}

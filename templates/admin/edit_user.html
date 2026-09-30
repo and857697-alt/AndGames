@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Edit User - AndGames{% endblock %}
+{% block header_title %}Edit User{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('admin') }}" style="color:var(--primary-2);font-size:12px;font-weight:700;text-decoration:none">← Dashboard</a>
+{% endblock %}
+
+{% block head %}
+<style>
+  .user-preview{
+    background:linear-gradient(135deg,rgba(139,92,246,.15),rgba(59,130,246,.1));
+    border:1px solid rgba(139,92,246,.3);
+    border-radius:var(--radius);padding:16px;margin-bottom:14px;
+    display:flex;align-items:center;gap:14px;
+  }
+  .user-preview .ava{
+    width:52px;height:52px;border-radius:14px;flex-shrink:0;
+    background:var(--grad-1);display:flex;align-items:center;
+    justify-content:center;font-weight:800;color:#fff;font-size:22px;
+    box-shadow:0 8px 20px rgba(139,92,246,.35);
+  }
+  .user-preview .info{flex:1;min-width:0}
+  .user-preview .un{font-size:15px;font-weight:700;margin-bottom:3px}
+  .user-preview .us{font-size:12px;color:var(--muted)}
+
+  .form-section{margin-bottom:14px}
+  .form-label{font-size:11px;font-weight:700;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.6px;margin:14px 0 4px 4px}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="user-preview">
+  <div class="ava">{{ u.username[0]|upper }}</div>
+  <div class="info">
+    <div class="un">{{ u.username }}</div>
+    <div class="us">Saldo: Rp {{ "{:,.0f}".format(u.saldo or 0).replace(",",".") }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <form method="post">
+    <div class="form-label">Username</div>
+    <input name="username" value="{{ u.username }}" placeholder="Username" required>
+
+    <div class="form-label">Email</div>
+    <input name="email" type="email" value="{{ u.email }}" placeholder="Email" required>
+
+    <div class="form-label">No HP</div>
+    <input name="no_hp" value="{{ u.no_hp }}" placeholder="No HP" required>
+
+    <div class="form-label">Metode</div>
+    <select name="metode" id="metode" required>
+      <option value="ewallet" {{ 'selected' if u.metode == 'ewallet' }}>📲 E-Wallet</option>
+      <option value="bank" {{ 'selected' if u.metode == 'bank' }}>💳 Bank</option>
+    </select>
+
+    <div class="form-label">Provider</div>
+    <select name="provider" id="provider" required></select>
+
+    <div class="form-label">No Rekening / E-Wallet</div>
+    <input name="norek" value="{{ u.norek }}" placeholder="No Rekening / No E-Wallet" required>
+
+    <div class="form-label">Password Baru (opsional)</div>
+    <input name="password" type="password" placeholder="Kosongkan jika tidak diganti">
+
+    <button style="margin-top:14px">
+      <svg style="width:16px;height:16px;display:inline;vertical-align:-3px;margin-right:6px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+        <polyline points="17 21 17 13 7 13 7 21"/>
+        <polyline points="7 3 7 8 15 8"/>
+      </svg>
+      Simpan Perubahan
+    </button>
+  </form>
+</div>
+
+<script>
+const P = {{ providers|tojson }};
+const m = document.getElementById("metode");
+const p = document.getElementById("provider");
+
+function fill(sel) {
+  p.innerHTML = "";
+  (P[m.value] || []).forEach(x => {
+    const o = document.createElement("option");
+    o.value = o.textContent = x;
+    if (x === sel) o.selected = true;
+    p.appendChild(o);
+  });
+}
+fill({{ (u.provider or '')|tojson }});
+m.addEventListener("change", () => fill(""));
+</script>
+
+{% endblock %}

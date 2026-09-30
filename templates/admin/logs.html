@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Log Aktivitas - Admin{% endblock %}
+{% block header_title %}📋 Log Aktivitas{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('admin') }}" style="color:var(--primary-2);font-size:12px;font-weight:700;text-decoration:none">← Dashboard</a>
+{% endblock %}
+
+{% block head %}
+<style>
+  .filter-bar{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;
+  }
+  .filter-bar label{font-size:10px;color:var(--muted);font-weight:700;
+    text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px}
+  .filter-bar select{margin:0;padding:8px 10px;font-size:12px}
+
+  .log-list{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);overflow:hidden;margin-bottom:14px;
+  }
+  .log-item{
+    display:flex;gap:12px;padding:12px 14px;
+    border-bottom:1px solid var(--border);font-size:12px;
+  }
+  .log-item:last-child{border-bottom:0}
+  .log-item .ic{
+    width:32px;height:32px;border-radius:9px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;background:var(--card-2);
+  }
+  .log-item .ic.login{background:rgba(59,130,246,.15);color:#60a5fa}
+  .log-item .ic.click{background:rgba(139,92,246,.15);color:#a855f7}
+  .log-item .ic.auto_block,.log-item .ic.manual_block{background:rgba(239,68,68,.15);color:#f87171}
+  .log-item .body{flex:1;min-width:0}
+  .log-item .who{font-weight:700;color:var(--text);margin-bottom:2px}
+  .log-item .what{font-size:11px;color:var(--text-2);margin-bottom:2px}
+  .log-item .meta{font-size:10px;color:var(--muted);line-height:1.5}
+  .log-item .aksi-badge{
+    display:inline-block;padding:1px 6px;border-radius:10px;
+    font-size:9px;font-weight:700;letter-spacing:.3px;
+    background:var(--card-2);color:var(--muted);margin-left:4px;
+  }
+
+  .pagination{
+    display:flex;justify-content:center;align-items:center;
+    gap:8px;margin-bottom:14px;
+  }
+  .pagination a, .pagination span{
+    padding:8px 12px;border-radius:10px;font-size:12px;
+    background:var(--card);border:1px solid var(--border);
+    color:var(--text-2);font-weight:600;text-decoration:none;
+  }
+  .pagination span.cur{background:var(--grad-1);color:#fff;border-color:transparent}
+  .pagination span.dis{opacity:.4;pointer-events:none}
+
+  .blocked-box{
+    background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.25);
+    border-radius:var(--radius);padding:14px;margin-bottom:14px;
+  }
+  .blocked-box h3{color:#f87171;margin:0 0 10px}
+  .blocked-item{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:8px 0;border-bottom:1px solid rgba(239,68,68,.15);font-size:12px;
+  }
+  .blocked-item:last-child{border-bottom:0}
+  .blocked-item .un{font-weight:700;color:#f87171}
+  .blocked-item .meta{font-size:10px;color:var(--muted)}
+  .blocked-item form button{
+    width:auto;padding:4px 10px;font-size:10px;margin:0;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if blocked_users %}
+<div class="blocked-box">
+  <h3>🚫 User Terblokir ({{ blocked_users|length }})</h3>
+  {% for b in blocked_users %}
+  <div class="blocked-item">
+    <div>
+      <div class="un">#{{ b.user_id }} • {{ b.username }}</div>
+      <div class="meta">{{ b.reason }} — sampai {{ b.until }}</div>
+    </div>
+    <form method="post" action="{{ url_for('admin_user_unblock', uid=b.user_id) }}">
+      <button class="success" type="submit">Unblock</button>
+    </form>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="filter-bar">
+  <form method="get">
+    <label>Filter Aksi</label>
+    <select name="aksi" onchange="this.form.submit()">
+      <option value="all" {{ 'selected' if aksi_filter == 'all' }}>Semua</option>
+      {% for a in aksi_list %}
+      <option value="{{ a }}" {{ 'selected' if aksi_filter == a }}>{{ a }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+{% if logs %}
+<div class="log-list">
+  {% for l in logs %}
+  <div class="log-item">
+    <div class="ic {{ l.aksi }}">
+      {% if l.aksi == 'login' %}🔐
+      {% elif l.aksi == 'click' %}👆
+      {% elif l.aksi == 'auto_block' %}🤖
+      {% elif l.aksi == 'manual_block' %}🚫
+      {% elif l.aksi == 'unblock' %}✅
+      {% else %}📌{% endif %}
+    </div>
+    <div class="body">
+      <div class="who">
+        {{ l.username or 'Anonim' }}
+        <span class="aksi-badge">{{ l.aksi }}</span>
+      </div>
+      {% if l.detail %}<div class="what">{{ l.detail }}</div>{% endif %}
+      <div class="meta">
+        {{ l.created_at }}
+        {% if l.ip %} • IP: {{ l.ip }}{% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="pagination">
+  {% if page > 1 %}
+    <a href="{{ url_for('admin_logs', aksi=aksi_filter, page=page-1) }}">← Prev</a>
+  {% else %}
+    <span class="dis">← Prev</span>
+  {% endif %}
+  <span class="cur">{{ page }} / {{ total_pages }}</span>
+  {% if page < total_pages %}
+    <a href="{{ url_for('admin_logs', aksi=aksi_filter, page=page+1) }}">Next →</a>
+  {% else %}
+    <span class="dis">Next →</span>
+  {% endif %}
+</div>
+
+{% else %}
+<div class="empty">Belum ada aktivitas.</div>
+{% endif %}
+
+{% endblock %}

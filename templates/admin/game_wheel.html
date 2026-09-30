@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Setelan Roda - Admin{% endblock %}
+{% block header_title %}🎡 Setelan Roda{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('admin_game') }}" style="color:var(--primary-2);font-size:12px;font-weight:700;text-decoration:none">← Game</a>
+{% endblock %}
+
+{% block head %}
+<style>
+  .stats-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;
+  }
+  .gstat{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:14px;
+  }
+  .gstat .gl{font-size:10px;color:var(--muted);font-weight:700;
+    text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+  .gstat .gv{font-size:18px;font-weight:800;letter-spacing:-.3px}
+  .gstat.green .gv{color:#34d399}
+  .gstat.amber .gv{color:#fbbf24}
+  .gstat.purple .gv{
+    background:var(--grad-1);-webkit-background-clip:text;
+    background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .gstat.red .gv{color:#f87171}
+
+  .seg-table{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);overflow:hidden;margin-bottom:14px;
+  }
+  .seg-row{
+    display:grid;grid-template-columns:36px 60px 70px 1fr 70px;
+    gap:8px;align-items:center;padding:12px 14px;
+    border-bottom:1px solid var(--border);
+  }
+  .seg-row:last-child{border-bottom:0}
+  .seg-row.head{
+    background:var(--card-2);font-size:10px;font-weight:700;
+    color:var(--muted);text-transform:uppercase;letter-spacing:.6px;
+    padding:10px 14px;
+  }
+  .seg-row .idx{
+    font-size:12px;font-weight:800;color:var(--muted);
+    text-align:center;
+  }
+  .seg-row input{
+    margin:0;padding:8px;font-size:12px;text-align:center;
+  }
+  .seg-row input[type=color]{
+    padding:2px;height:34px;cursor:pointer;
+  }
+  .seg-row .weight{
+    font-weight:800;
+  }
+
+  .btn-bar{
+    display:flex;gap:8px;margin-bottom:14px;
+  }
+  .btn-bar > *{flex:1}
+  .btn-bar button{padding:12px;font-size:13px;margin:0}
+
+  .info-banner{
+    background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);
+    border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;
+    color:var(--text-2);line-height:1.7;margin-bottom:14px;
+  }
+  .info-banner b{color:var(--primary-2)}
+  .info-banner .chance{
+    display:inline-block;padding:1px 6px;border-radius:6px;
+    background:var(--card-2);font-weight:700;color:#34d399;
+    font-size:11px;margin-left:4px;
+  }
+
+  .total-bar{
+    background:var(--card-2);border:1px solid var(--border-2);
+    border-radius:10px;padding:10px 14px;margin-bottom:14px;
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:13px;
+  }
+  .total-bar .lbl{color:var(--muted);font-weight:600}
+  .total-bar .val{font-weight:800;color:var(--primary-2)}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="info-banner">
+  <b>🔒 Silent Control:</b> Atur bobot tiap segmen. Semakin besar bobot, semakin sering keluar.<br>
+  <b>Bobot = 0</b> artinya segmen tidak akan pernah keluar.<br>
+  <b>Kolom "Peluang"</b> di bawah menunjukkan persentase kemunculan.
+</div>
+
+<div class="stats-grid">
+  <div class="gstat purple">
+    <div class="gl">Total Spin</div>
+    <div class="gv">{{ stats.total_spins }}</div>
+  </div>
+  <div class="gstat green">
+    <div class="gl">Total Bet</div>
+    <div class="gv">Rp {{ "{:,.0f}".format(stats.total_bet).replace(",",".") }}</div>
+  </div>
+  <div class="gstat amber">
+    <div class="gl">Total Payout</div>
+    <div class="gv">Rp {{ "{:,.0f}".format(stats.total_payout).replace(",",".") }}</div>
+  </div>
+  <div class="gstat {{ 'red' if stats.profit < 0 else 'green' }}">
+    <div class="gl">Profit Admin</div>
+    <div class="gv">
+      {{ '-' if stats.profit < 0 else '' }}Rp {{ "{:,.0f}".format(stats.profit|abs).replace(",",".") }}
+    </div>
+  </div>
+</div>
+
+<div class="btn-bar">
+  <a href="{{ url_for('admin_game_wheel_users') }}">
+    <button class="ghost" style="width:100%">👥 Override User</button>
+  </a>
+</div>
+
+<h3>Bobot & Segmen</h3>
+
+<div class="total-bar">
+  <span class="lbl">Total Bobot</span>
+  <span class="val" id="totalW">{{ total_weight }}</span>
+</div>
+
+<form method="post" action="{{ url_for('admin_game_wheel_save') }}" id="wheelForm">
+  <div class="seg-table">
+    <div class="seg-row head">
+      <div style="text-align:center">#</div>
+      <div>Label</div>
+      <div>Mult</div>
+      <div>Bobot</div>
+      <div>Warna</div>
+    </div>
+    {% for s in segments %}
+    <div class="seg-row">
+      <div class="idx">{{ s.idx + 1 }}</div>
+      <input name="label_{{ s.idx }}" value="{{ s.label }}" maxlength="6">
+      <input name="mult_{{ s.idx }}" type="number" step="0.1" min="0"
+             value="{{ s.mult }}" inputmode="decimal">
+      <input name="weight_{{ s.idx }}" type="number" step="1" min="0"
+             value="{{ s.weight }}" inputmode="numeric"
+             class="weight" data-idx="{{ s.idx }}"
+             oninput="hitungTotal()">
+      <input name="color_{{ s.idx }}" type="color" value="{{ s.color }}">
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="info-banner">
+    <b>Peluang kemunculan:</b>
+    <div id="chanceList" style="margin-top:6px"></div>
+  </div>
+
+  <div class="btn-bar">
+    <button type="submit" class="success">💾 Simpan</button>
+  </div>
+</form>
+
+<form method="post" action="{{ url_for('admin_game_wheel_reset') }}"
+      onsubmit="return confirm('Reset semua bobot & segmen ke default?')">
+  <button class="ghost" style="width:100%;padding:12px;font-size:13px">🔄 Reset ke Default</button>
+</form>
+
+<script>
+  function hitungTotal(){
+    let total = 0;
+    document.querySelectorAll('.weight').forEach(el => {
+      total += parseInt(el.value) || 0;
+    });
+    document.getElementById('totalW').textContent = total;
+    hitungPeluang(total);
+  }
+  function hitungPeluang(total){
+    const list = document.getElementById('chanceList');
+    if (!total) { list.innerHTML = '-'; return; }
+    let html = '';
+    document.querySelectorAll('.weight').forEach(el => {
+      const idx = el.dataset.idx;
+      const lbl = document.querySelector(`input[name="label_${idx}"]`).value;
+      const w = parseInt(el.value) || 0;
+      const pct = ((w / total) * 100).toFixed(1);
+      html += `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px">
+        <span><b>#${parseInt(idx)+1}</b> ${lbl} (w=${w})</span>
+        <span class="chance">${pct}%</span>
+      </div>`;
+    });
+    list.innerHTML = html;
+  }
+  hitungTotal();
+</script>
+
+{% endblock %}

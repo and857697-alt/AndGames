@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Profil - AndGames{% endblock %}
+{% block header_title %}Profil{% endblock %}
+{% block header_right %}
+  <div class="saldo-chip">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M14.5 9.5c-.5-.5-1.5-1-2.5-1s-2.5.5-2.5 1.5S10.5 11.5 12 11.5s2.5.5 2.5 1.5-1.5 1.5-2.5 1.5-2-.5-2.5-1"/>
+    </svg>
+    Rp {{ "{:,.0f}".format(u.saldo).replace(",",".") }}
+  </div>
+{% endblock %}
+
+{% block head %}
+<style>
+  .avatar-wrap{text-align:center;padding:8px 0 18px}
+  .avatar{
+    width:80px;height:80px;border-radius:50%;margin:0 auto 12px;
+    background:var(--grad-1);display:flex;align-items:center;justify-content:center;
+    font-size:34px;font-weight:800;color:#fff;
+    box-shadow:0 10px 30px rgba(139,92,246,.4);
+    border:3px solid var(--card);
+    position:relative;
+  }
+  .avatar::after{
+    content:"";position:absolute;inset:-3px;border-radius:50%;
+    background:var(--grad-1);z-index:-1;opacity:.4;filter:blur(8px);
+  }
+  .avatar-wrap .uname{font-size:18px;font-weight:700;margin-bottom:2px}
+  .avatar-wrap .uemail{font-size:12px;color:var(--muted)}
+
+  .stats{display:flex;gap:8px;margin-bottom:16px}
+  .stat{
+    flex:1;background:var(--card);border:1px solid var(--border);
+    border-radius:12px;padding:12px 8px;text-align:center;
+  }
+  .stat .sv{
+    font-size:15px;font-weight:800;
+    background:var(--grad-1);-webkit-background-clip:text;
+    background-clip:text;-webkit-text-fill-color:transparent;
+    margin-bottom:2px;letter-spacing:-.2px;
+  }
+  .stat .sl{font-size:10px;color:var(--muted);font-weight:600;
+    text-transform:uppercase;letter-spacing:.5px}
+
+  .info-list{background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:0 16px;margin-bottom:14px}
+  .info-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:14px 0;border-bottom:1px solid var(--border);
+    gap:12px;
+  }
+  .info-row:last-child{border-bottom:0}
+  .info-row .k{font-size:12px;color:var(--muted);font-weight:600;
+    text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
+  .info-row .v{font-size:14px;font-weight:600;text-align:right;
+    word-break:break-word;min-width:0}
+
+  .logout-btn{
+    background:linear-gradient(135deg,#ef4444,#b91c1c) !important;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .logout-btn:hover{box-shadow:0 6px 20px rgba(239,68,68,.4) !important}
+  .logout-btn svg{width:16px;height:16px;stroke-width:2.5}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="avatar-wrap">
+  <div class="avatar">{{ u.username[0]|upper }}</div>
+  <div class="uname">{{ u.username }}</div>
+  <div class="uemail">{{ u.email }}</div>
+</div>
+
+<div class="stats">
+  <div class="stat">
+    <div class="sv">{{ stats.total_tx or 0 }}</div>
+    <div class="sl">Transaksi</div>
+  </div>
+  <div class="stat">
+    <div class="sv">Rp {{ "{:,.0f}".format(stats.total_depo or 0).replace(",",".") }}</div>
+    <div class="sl">Total Depo</div>
+  </div>
+  <div class="stat">
+    <div class="sv">Rp {{ "{:,.0f}".format(stats.total_wd or 0).replace(",",".") }}</div>
+    <div class="sl">Total WD</div>
+  </div>
+</div>
+
+<div class="info-list">
+  <div class="info-row">
+    <div class="k">No HP</div>
+    <div class="v">{{ u.no_hp }}</div>
+  </div>
+  <div class="info-row">
+    <div class="k">Metode</div>
+    <div class="v">{{ 'E-Wallet' if u.metode=='ewallet' else 'Bank' }}</div>
+  </div>
+  <div class="info-row">
+    <div class="k">Provider</div>
+    <div class="v">{{ u.provider or '-' }}</div>
+  </div>
+  <div class="info-row">
+    <div class="k">No Rek</div>
+    <div class="v">{{ u.norek }}</div>
+  </div>
+  <div class="info-row">
+    <div class="k">Saldo</div>
+    <div class="v big-saldo" style="font-size:18px;margin:0">
+      Rp {{ "{:,.0f}".format(u.saldo).replace(",",".") }}
+    </div>
+  </div>
+  <a href="{{ url_for('user_notif') }}" class="info-row" style="text-decoration:none;color:inherit">
+    <div class="k">🔔 Notifikasi</div>
+    <div class="v" style="color:var(--primary-2)">
+      Lihat
+      <span class="nav-badge" id="profilNotifBadge" style="display:none;position:static;margin-left:6px">0</span>
+    </div>
+  </a>
+</div>
+
+<button class="logout-btn" onclick="confirmModal('Yakin mau logout?', () => location.href='{{ url_for('logout') }}')">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+    <polyline points="16 17 21 12 16 7"/>
+    <line x1="21" y1="12" x2="9" y2="12"/>
+  </svg>
+  Logout
+</button>
+
+<script>
+(function(){
+  fetch('{{ url_for("user_notif_count") }}')
+    .then(r => r.json())
+    .then(d => {
+      const b = document.getElementById('profilNotifBadge');
+      if (b && d.count > 0) {
+        b.textContent = d.count;
+        b.style.display = 'inline-flex';
+      }
+    })
+    .catch(()=>{});
+})();
+</script>
+
+{% endblock %}
+
+{% block bottomnav %}{% include "partials/bottomnav.html" %}{% endblock %}

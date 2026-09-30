@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block title %}Analytics - Admin{% endblock %}
+{% block header_title %}📈 Analytics{% endblock %}
+{% block header_right %}
+  <a href="{{ url_for('admin') }}" style="color:var(--primary-2);font-size:12px;font-weight:700;text-decoration:none">← Dashboard</a>
+{% endblock %}
+
+{% block head %}
+<style>
+  .sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .sum{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:14px;position:relative;overflow:hidden;
+  }
+  .sum .lbl{font-size:10px;color:var(--muted);font-weight:700;
+    text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+  .sum .val{font-size:16px;font-weight:800;letter-spacing:-.3px;line-height:1.2}
+  .sum.purple .val{background:var(--grad-1);-webkit-background-clip:text;
+    background-clip:text;-webkit-text-fill-color:transparent}
+  .sum.green .val{color:#34d399}
+  .sum.amber .val{color:#fbbf24}
+  .sum.blue .val{color:#60a5fa}
+  .sum.red .val{color:#f87171}
+
+  /* CHART */
+  .chart-card{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:16px;margin-bottom:14px;
+  }
+  .chart-head{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:16px;
+  }
+  .chart-head h3{margin:0;font-size:13px}
+  .chart-legend{display:flex;gap:12px;font-size:10px;font-weight:700}
+  .chart-legend .item{display:flex;align-items:center;gap:4px;color:var(--muted)}
+  .chart-legend .dot{width:8px;height:8px;border-radius:2px}
+
+  .chart{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    gap:6px;height:140px;padding-bottom:24px;
+    position:relative;
+  }
+  .chart::before{
+    content:"";position:absolute;left:0;right:0;bottom:24px;
+    height:1px;background:var(--border);
+  }
+  .bar-wrap{
+    flex:1;height:100%;display:flex;flex-direction:column;
+    align-items:center;justify-content:flex-end;
+    position:relative;
+  }
+  .bar{
+    width:70%;max-width:20px;border-radius:3px 3px 0 0;
+    transition:.3s;position:relative;
+    min-height:2px;
+  }
+  .bar.bet{background:linear-gradient(180deg,#8b5cf6,#6366f1)}
+  .bar.profit{background:linear-gradient(180deg,#34d399,#059669)}
+  .bar.loss{background:linear-gradient(180deg,#f87171,#dc2626)}
+  .bar-wrap .lbl{
+    position:absolute;bottom:-20px;font-size:10px;
+    color:var(--muted);font-weight:600;
+  }
+  .bar-wrap:hover .bar{filter:brightness(1.2)}
+  .bar-wrap .tooltip{
+    position:absolute;bottom:100%;margin-bottom:6px;
+    background:var(--card-2);border:1px solid var(--border-2);
+    border-radius:8px;padding:6px 8px;font-size:10px;
+    white-space:nowrap;opacity:0;pointer-events:none;
+    transition:.15s;z-index:10;
+  }
+  .bar-wrap:hover .tooltip{opacity:1}
+
+  /* TABEL TOP USER */
+  .top-list{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);overflow:hidden;margin-bottom:14px;
+  }
+  .top-item{
+    display:flex;align-items:center;gap:12px;
+    padding:12px 14px;border-bottom:1px solid var(--border);
+    font-size:12px;
+  }
+  .top-item:last-child{border-bottom:0}
+  .top-item .rank{
+    width:26px;height:26px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:800;flex-shrink:0;
+    background:var(--card-2);color:var(--muted);
+  }
+  .top-item .rank.gold{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#fff}
+  .top-item .rank.silver{background:linear-gradient(135deg,#94a3b8,#64748b);color:#fff}
+  .top-item .rank.bronze{background:linear-gradient(135deg,#d97706,#92400e);color:#fff}
+  .top-item .un{flex:1;font-weight:700;color:var(--text)}
+  .top-item .val{font-weight:800;color:var(--primary-2)}
+  .top-item .sub{font-size:10px;color:var(--muted);display:block;font-weight:500}
+
+  /* RTP */
+  .rtp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .rtp-card{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:var(--radius);padding:14px;
+  }
+  .rtp-card h4{margin:0 0 10px;font-size:13px;text-transform:none;letter-spacing:0}
+  .rtp-row{
+    display:flex;justify-content:space-between;padding:5px 0;
+    font-size:11px;border-bottom:1px solid var(--border);
+  }
+  .rtp-row:last-child{border-bottom:0}
+  .rtp-row .k{color:var(--muted);font-weight:600}
+  .rtp-row .v{font-weight:800}
+  .rtp-row .v.green{color:#34d399}
+  .rtp-row .v.amber{color:#fbbf24}
+  .rtp-row .v.red{color:#f87171}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<h3>Ringkasan</h3>
+<div class="sum-grid">
+  <div class="sum purple">
+    <div class="lbl">Total User</div>
+    <div class="val">{{ summary.total_users }}</div>
+  </div>
+  <div class="sum green">
+    <div class="lbl">Total Saldo User</div>
+    <div class="val">Rp {{ "{:,.0f}".format(summary.total_saldo).replace(",",".") }}</div>
+  </div>
+  <div class="sum blue">
+    <div class="lbl">Total Deposit</div>
+    <div class="val">Rp {{ "{:,.0f}".format(summary.total_deposit).replace(",",".") }}</div>
+  </div>
+  <div class="sum amber">
+    <div class="lbl">Total Withdraw</div>
+    <div class="val">Rp {{ "{:,.0f}".format(summary.total_withdraw).replace(",",".") }}</div>
+  </div>
+  <div class="sum {{ 'red' if summary.game_profit < 0 else 'green' }}" style="grid-column:1/-1">
+    <div class="lbl">Profit Game (dari Game)</div>
+    <div class="val">
+      {{ '-' if summary.game_profit < 0 else '' }}Rp {{ "{:,.0f}".format(summary.game_profit|abs).replace(",",".") }}
+    </div>
+  </div>
+</div>
+
+<h3>Grafik 7 Hari</h3>
+<div class="chart-card">
+  <div class="chart-head">
+    <h3>Bet vs Profit</h3>
+    <div class="chart-legend">
+      <span class="item"><span class="dot" style="background:#8b5cf6"></span>Bet</span>
+      <span class="item"><span class="dot" style="background:#34d399"></span>Profit</span>
+    </div>
+  </div>
+  <div class="chart">
+    {% for d in days %}
+    <div class="bar-wrap">
+      <div class="bar bet" style="height:{{ (d.bet / (max_profit * 1.5) * 100) | round(1) if max_profit else 0 }}%"></div>
+      <div class="bar {{ 'profit' if d.profit >= 0 else 'loss' }}"
+           style="height:{{ (d.profit|abs / (max_profit * 1.5) * 100) | round(1) if max_profit else 0 }}%;
+                  position:absolute;bottom:24px;"></div>
+      <div class="lbl">{{ d.label }}</div>
+      <div class="tooltip">
+        Bet: Rp {{ "{:,.0f}".format(d.bet).replace(",",".") }}<br>
+        Profit: Rp {{ "{:,.0f}".format(d.profit).replace(",",".") }}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<h3>RTP (Return to Player)</h3>
+<div class="rtp-grid">
+  <div class="rtp-card">
+    <h4>💎 Mines</h4>
+    <div class="rtp-row"><span class="k">Ronde</span><span class="v">{{ rtp.mines.rounds }}</span></div>
+    <div class="rtp-row"><span class="k">Total Bet</span><span class="v">Rp {{ "{:,.0f}".format(rtp.mines.bet).replace(",",".") }}</span></div>
+    <div class="rtp-row"><span class="k">Total Payout</span><span class="v">Rp {{ "{:,.0f}".format(rtp.mines.payout).replace(",",".") }}</span></div>
+    <div class="rtp-row"><span class="k">RTP</span>
+      <span class="v {{ 'green' if rtp.mines.rtp < 100 else 'red' }}">{{ rtp.mines.rtp }}%</span>
+    </div>
+    <div class="rtp-row"><span class="k">Profit Admin</span>
+      <span class="v {{ 'green' if rtp.mines.profit >= 0 else 'red' }}">Rp {{ "{:,.0f}".format(rtp.mines.profit).replace(",",".") }}</span>
+    </div>
+  </div>
+  <div class="rtp-card">
+    <h4>🎡 Spin</h4>
+    <div class="rtp-row"><span class="k">Spin</span><span class="v">{{ rtp.spin.rounds }}</span></div>
+    <div class="rtp-row"><span class="k">Total Bet</span><span class="v">Rp {{ "{:,.0f}".format(rtp.spin.bet).replace(",",".") }}</span></div>
+    <div class="rtp-row"><span class="k">Total Payout</span><span class="v">Rp {{ "{:,.0f}".format(rtp.spin.payout).replace(",",".") }}</span></div>
+    <div class="rtp-row"><span class="k">RTP</span>
+      <span class="v {{ 'green' if rtp.spin.rtp < 100 else 'red' }}">{{ rtp.spin.rtp }}%</span>
+    </div>
+    <div class="rtp-row"><span class="k">Profit Admin</span>
+      <span class="v {{ 'green' if rtp.spin.profit >= 0 else 'red' }}">Rp {{ "{:,.0f}".format(rtp.spin.profit).replace(",",".") }}</span>
+    </div>
+  </div>
+</div>
+
+<h3>Top 10 Pemain Aktif</h3>
+{% if top_players %}
+<div class="top-list">
+  {% for p in top_players %}
+  <div class="top-item">
+    <div class="rank {{ 'gold' if loop.index==1 else 'silver' if loop.index==2 else 'bronze' if loop.index==3 }}">
+      {{ loop.index }}
+    </div>
+    <div class="un">{{ p.username }}
+      <span class="sub">Rp {{ "{:,.0f}".format(p.total_bet).replace(",",".") }} total bet</span>
+    </div>
+    <div class="val">{{ p.total_main }}x</div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">Belum ada aktivitas game.</div>
+{% endif %}
+
+{% endblock %}
